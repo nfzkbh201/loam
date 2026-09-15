@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { discoverTargets } from "./discovery.mjs";
 import { scanTarget } from "./scanner.mjs";
 import { buildMarkdownReport } from "./report/markdown.mjs";
 import { buildResearchExport } from "./report/research.mjs";
 import { buildSarifReport } from "./report/sarif.mjs";
+import { printDiscoveryReport } from "./report/discovery-terminal.mjs";
 import { printTerminalReport } from "./report/terminal.mjs";
 
 const SEVERITY_RANK = {
@@ -18,9 +20,11 @@ function usage() {
   console.log(`agentsec
 
 Usage:
+  agentsec discover [path] [--json]
   agentsec scan <path> [--json] [--markdown <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
 
 Examples:
+  agentsec discover .
   agentsec scan .
   agentsec scan ./fixtures/browser-shell-risk --json
   agentsec scan . --markdown agentsec-report.md
@@ -36,6 +40,24 @@ function parseArgs(argv) {
 
   if (!command || command === "--help" || command === "-h") {
     return { help: true };
+  }
+
+  if (command === "discover") {
+    const target = args[0] && !args[0].startsWith("-") ? args.shift() : ".";
+    const options = {
+      json: false
+    };
+
+    for (const arg of args) {
+      if (arg === "--json") {
+        options.json = true;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, target, options };
   }
 
   if (command !== "scan") {
@@ -123,6 +145,18 @@ if (parsed.error) {
 }
 
 try {
+  if (parsed.command === "discover") {
+    const results = discoverTargets({ root: parsed.target });
+
+    if (parsed.options.json) {
+      console.log(JSON.stringify(results, null, 2));
+    } else {
+      printDiscoveryReport(results);
+    }
+
+    process.exit(0);
+  }
+
   const result = scanTarget(parsed.target);
 
   if (parsed.options.markdown) {
