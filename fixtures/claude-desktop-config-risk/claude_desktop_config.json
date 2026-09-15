@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "browser": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-browser"]
+    },
+    "local-shell": {
+      "command": "npx",
+      "args": ["mcp-shell"]
+    }
+  }
+}

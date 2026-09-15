@@ -1,0 +1,17 @@
+{
+  "name": "agentsec",
+  "version": "0.1.0",
+  "description": "A local scanner for risky AI agent and MCP toolchains.",
+  "type": "module",
+  "bin": {
+    "agentsec": "./src/cli.mjs"
+  },
+  "scripts": {
+    "scan": "node ./src/cli.mjs scan .",
+    "private-scan": "node ./scripts/private-scan.mjs .",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

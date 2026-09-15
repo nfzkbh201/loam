@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "browser": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-browser"]
+    },
+    "crm": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-postgres", "--database", "customer_crm"]
+    }
+  }
+}

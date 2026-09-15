@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "readonly-docs": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "./docs-readonly"]
+    }
+  }
+}

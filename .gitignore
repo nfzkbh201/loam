@@ -1,0 +1,9 @@
+node_modules/
+coverage/
+.DS_Store
+agentsec-report.md
+agentsec-research.json
+agentsec-scan-output/
+scan-output/
+*.sarif
+*.log

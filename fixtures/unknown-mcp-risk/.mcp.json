@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "random-mcp-tools": {
+      "command": "npx",
+      "args": ["random-mcp-tools"],
+      "env": {
+        "CRM_API_TOKEN": "${CRM_API_TOKEN}"
+      }
+    }
+  }
+}

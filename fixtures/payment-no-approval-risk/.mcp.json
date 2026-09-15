@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "stripe-refunds": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-stripe", "--capability", "refund"]
+    }
+  }
+}
