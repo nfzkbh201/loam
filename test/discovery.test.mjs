@@ -15,7 +15,7 @@ test("discovers project MCP configs by existence", () => {
     platform: "darwin"
   });
 
-  const projectConfig = results.find((result) => result.label === ".mcp.json");
+  const projectConfig = results.find((result) => result.label === "Project config (.mcp.json)");
   assert.ok(projectConfig);
   assert.equal(projectConfig.exists, true);
   assert.equal(projectConfig.scan_hint, tmp);

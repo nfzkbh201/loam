@@ -9,6 +9,7 @@
   "scripts": {
     "discover": "node ./src/cli.mjs discover .",
     "scan": "node ./src/cli.mjs scan .",
+    "scan-known": "node ./src/cli.mjs scan-known .",
     "private-scan": "node ./scripts/private-scan.mjs .",
     "test": "node --test"
   },

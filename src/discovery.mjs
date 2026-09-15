@@ -26,7 +26,7 @@ function projectCandidates(root) {
   const normalizedRoot = path.resolve(root);
   return MCP_CONFIG_NAMES.map((name) => ({
     type: "project_mcp_config",
-    label: name,
+    label: `Project config (${name})`,
     path: path.join(normalizedRoot, name),
     scan_hint: normalizedRoot
   }));

@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { discoverTargets } from "./discovery.mjs";
-import { scanTarget } from "./scanner.mjs";
+import { scanTarget, scanTargets } from "./scanner.mjs";
 import { buildMarkdownReport } from "./report/markdown.mjs";
 import { buildResearchExport } from "./report/research.mjs";
 import { buildSarifReport } from "./report/sarif.mjs";
@@ -21,10 +21,12 @@ function usage() {
 
 Usage:
   agentsec discover [path] [--json]
+  agentsec scan-known [path] [--json] [--markdown <file>] [--research <file>] [--fail-on <severity>]
   agentsec scan <path> [--json] [--markdown <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
 
 Examples:
   agentsec discover .
+  agentsec scan-known .
   agentsec scan .
   agentsec scan ./fixtures/browser-shell-risk --json
   agentsec scan . --markdown agentsec-report.md
@@ -42,15 +44,50 @@ function parseArgs(argv) {
     return { help: true };
   }
 
-  if (command === "discover") {
+  if (command === "discover" || command === "scan-known") {
     const target = args[0] && !args[0].startsWith("-") ? args.shift() : ".";
     const options = {
-      json: false
+      json: false,
+      markdown: null,
+      research: null,
+      failOn: null
     };
 
-    for (const arg of args) {
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
       if (arg === "--json") {
         options.json = true;
+        continue;
+      }
+
+      if (command === "scan-known" && arg === "--markdown") {
+        const markdownPath = args[i + 1];
+        if (!markdownPath || markdownPath.startsWith("-")) {
+          return { error: "--markdown requires an output file path." };
+        }
+        options.markdown = markdownPath;
+        i += 1;
+        continue;
+      }
+
+      if (command === "scan-known" && arg === "--research") {
+        const researchPath = args[i + 1];
+        if (!researchPath || researchPath.startsWith("-")) {
+          return { error: "--research requires an output file path." };
+        }
+        options.research = researchPath;
+        i += 1;
+        continue;
+      }
+
+      if (command === "scan-known" && arg === "--fail-on") {
+        const severity = args[i + 1];
+        if (!SEVERITY_RANK[severity]) {
+          return { error: "--fail-on must be one of: low, medium, high, critical." };
+        }
+        options.failOn = severity;
+        i += 1;
         continue;
       }
 
@@ -157,7 +194,24 @@ try {
     process.exit(0);
   }
 
-  const result = scanTarget(parsed.target);
+  let result;
+
+  if (parsed.command === "scan-known") {
+    const discovered = discoverTargets({ root: parsed.target }).filter((target) => target.exists);
+
+    if (discovered.length === 0) {
+      throw new Error("No known agent or MCP config locations were found.");
+    }
+
+    const uniqueTargets = uniqueByScanHint(discovered).map((target) => ({
+      label: target.label,
+      path: target.scan_hint
+    }));
+
+    result = scanTargets(uniqueTargets);
+  } else {
+    result = scanTarget(parsed.target);
+  }
 
   if (parsed.options.markdown) {
     const outputPath = path.resolve(parsed.options.markdown);
@@ -193,4 +247,20 @@ try {
 } catch (error) {
   console.error(`agentsec scan failed: ${error.message}`);
   process.exit(1);
+}
+
+function uniqueByScanHint(discovered) {
+  const seen = new Set();
+  const output = [];
+
+  for (const target of discovered) {
+    if (seen.has(target.scan_hint)) {
+      continue;
+    }
+
+    seen.add(target.scan_hint);
+    output.push(target);
+  }
+
+  return output;
 }

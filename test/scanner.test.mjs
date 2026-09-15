@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { scanTarget } from "../src/scanner.mjs";
+import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -91,4 +91,21 @@ test("research export strips names, args, config paths, and env keys", () => {
   assert.equal(serialized.includes(".mcp.json"), false);
   assert.equal(serialized.includes("@modelcontextprotocol/server-browser"), false);
   assert.equal(serialized.includes("browser"), false);
+});
+
+test("scanTargets merges labeled results", () => {
+  const result = scanTargets([
+    {
+      label: "Browser shell fixture",
+      path: path.join(fixtures, "browser-shell-risk")
+    },
+    {
+      label: "Payment fixture",
+      path: path.join(fixtures, "payment-no-approval-risk")
+    }
+  ]);
+
+  assert.equal(result.targets.length, 2);
+  assert.equal(result.summary.by_severity.critical, 2);
+  assert.equal(result.abom.mcp_servers.some((server) => server.config_file.startsWith("Browser shell fixture:")), true);
 });

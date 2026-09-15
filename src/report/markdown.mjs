@@ -12,6 +12,21 @@ export function buildMarkdownReport(result) {
   );
   lines.push("");
 
+  if (result.targets?.length > 0) {
+    lines.push("## Scanned Targets");
+    lines.push("");
+    lines.push("| Target | Findings | Risk score |");
+    lines.push("| --- | ---: | ---: |");
+
+    for (const target of result.targets) {
+      lines.push(
+        `| ${escapeCell(target.label)} | ${target.summary.total_findings} | ${target.summary.risk_score}/100 |`
+      );
+    }
+
+    lines.push("");
+  }
+
   lines.push("## Agent Bill of Materials");
   lines.push("");
   lines.push(`- MCP config files: ${result.abom.mcp_config_files.length}`);

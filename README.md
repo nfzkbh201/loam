@@ -20,6 +20,7 @@ It creates a small Agent Bill of Materials (ABOM) and flags critical risk paths 
 ```bash
 cd agentsec
 node ./src/cli.mjs discover .
+node ./src/cli.mjs scan-known .
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk
 node ./src/cli.mjs scan ./fixtures/unknown-mcp-risk --json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report.md
@@ -100,6 +101,12 @@ node ./src/cli.mjs discover . --json
 ```
 
 Discovery only checks whether known config paths exist. It does not read or upload their contents.
+
+To scan existing discovered config locations in one combined report:
+
+```bash
+node ./src/cli.mjs scan-known . --markdown agentsec-report.md --research agentsec-research.json
+```
 
 ## Demo Fixtures
 

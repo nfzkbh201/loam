@@ -24,14 +24,110 @@ export function scanTarget(targetPath) {
   const findings = runRules(context);
   const summary = summarize(findings);
 
+  return buildScanResult({
+    target: root,
+    context,
+    findings,
+    summary
+  });
+}
+
+export function scanTargets(targets) {
+  const results = targets.map((target) => {
+    const result = scanTarget(target.path);
+    return labelResult(result, target.label || target.path);
+  });
+
+  const findings = results.flatMap((result) => result.findings);
+  const summary = summarize(findings);
+  const capabilities = Array.from(new Set(results.flatMap((result) => result.abom.capabilities))).sort();
+
   return {
     tool: "agentsec",
     version: "0.1.0",
     scanned_at: new Date().toISOString(),
-    target: root,
+    target: "known agent config locations",
+    targets: results.map((result) => ({
+      label: result.target_label,
+      target: result.target,
+      summary: result.summary
+    })),
+    abom: {
+      mcp_config_files: results.flatMap((result) => result.abom.mcp_config_files),
+      mcp_servers: results.flatMap((result) => result.abom.mcp_servers),
+      capabilities,
+      package_scripts: {},
+      github_workflows: results.flatMap((result) => result.abom.github_workflows),
+      env_files: results.flatMap((result) => result.abom.env_files)
+    },
+    summary,
+    findings
+  };
+}
+
+function buildScanResult({ target, context, findings, summary }) {
+  return {
+    tool: "agentsec",
+    version: "0.1.0",
+    scanned_at: new Date().toISOString(),
+    target,
     abom: buildAbom(context),
     summary,
     findings
+  };
+}
+
+function labelResult(result, label) {
+  return {
+    ...result,
+    target_label: label,
+    abom: {
+      ...result.abom,
+      mcp_config_files: result.abom.mcp_config_files.map((file) => `${label}: ${file}`),
+      mcp_servers: result.abom.mcp_servers.map((server) => ({
+        ...server,
+        target_label: label,
+        config_file: `${label}: ${server.config_file}`
+      })),
+      github_workflows: result.abom.github_workflows.map((workflow) => ({
+        ...workflow,
+        target_label: label,
+        file: `${label}: ${workflow.file}`
+      })),
+      env_files: result.abom.env_files.map((envFile) => ({
+        ...envFile,
+        target_label: label,
+        file: `${label}: ${envFile.file}`
+      }))
+    },
+    findings: result.findings.map((finding) => ({
+      ...finding,
+      target_label: label,
+      evidence: finding.evidence.map((evidence) => labelEvidence(evidence, label))
+    }))
+  };
+}
+
+function labelEvidence(evidence, label) {
+  if (evidence.type === "mcp_server") {
+    return {
+      ...evidence,
+      target_label: label,
+      config_file: `${label}: ${evidence.config_file}`
+    };
+  }
+
+  if (evidence.type === "github_workflow" || evidence.type === "env_file") {
+    return {
+      ...evidence,
+      target_label: label,
+      file: `${label}: ${evidence.file}`
+    };
+  }
+
+  return {
+    ...evidence,
+    target_label: label
   };
 }
 

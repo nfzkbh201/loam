@@ -26,6 +26,15 @@ export function printTerminalReport(result) {
   );
 
   console.log("");
+
+  if (result.targets?.length > 0) {
+    console.log(bold("Scanned Targets"));
+    for (const target of result.targets) {
+      console.log(`- ${target.label}: ${target.summary.total_findings} findings, risk ${target.summary.risk_score}/100`);
+    }
+    console.log("");
+  }
+
   console.log(bold("Agent Bill of Materials"));
   console.log(`MCP configs: ${result.abom.mcp_config_files.length || 0}`);
   console.log(`MCP servers: ${result.abom.mcp_servers.length || 0}`);
