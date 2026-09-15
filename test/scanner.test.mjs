@@ -4,6 +4,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
+import { buildRedactedMarkdownReport } from "../src/report/redacted-markdown.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.join(__dirname, "..", "fixtures");
@@ -108,4 +109,21 @@ test("scanTargets merges labeled results", () => {
   assert.equal(result.targets.length, 2);
   assert.equal(result.summary.by_severity.critical, 2);
   assert.equal(result.abom.mcp_servers.some((server) => server.config_file.startsWith("Browser shell fixture:")), true);
+});
+
+test("redacted markdown hides server names, package names, and config filenames", () => {
+  const result = scanTargets([
+    {
+      label: "Cursor MCP config",
+      path: path.join(fixtures, "browser-shell-risk")
+    }
+  ]);
+  const markdown = buildRedactedMarkdownReport(result);
+
+  assert.equal(markdown.includes("@modelcontextprotocol/server-browser"), false);
+  assert.equal(markdown.includes("mcp-shell"), false);
+  assert.equal(markdown.includes(".mcp.json"), false);
+  assert.equal(markdown.includes("shell ("), false);
+  assert.equal(markdown.includes("Cursor config"), true);
+  assert.equal(markdown.includes("web_access"), true);
 });

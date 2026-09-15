@@ -34,14 +34,59 @@ export function buildResearchExport(result) {
       capabilities: result.abom.capabilities,
       capability_counts: capabilityCounts
     },
-    findings: result.findings.map((finding) => ({
-      id: finding.id,
-      severity: finding.severity,
-      path: finding.path.map(redactPathSegment),
-      evidence_types: Array.from(new Set(finding.evidence.map((item) => item.type))).sort()
-    })),
+    findings: result.findings.map((finding) => {
+      const redacted = buildRedactedFinding(finding);
+      return {
+        id: redacted.id,
+        severity: redacted.severity,
+        path: redacted.path,
+        evidence_types: redacted.evidence_types,
+        target_label: redacted.target_label
+      };
+    }),
     finding_counts: findingCounts
   };
+}
+
+export function buildRedactedFinding(finding) {
+  return {
+    id: finding.id,
+    title: finding.title,
+    severity: finding.severity,
+    path: finding.path.map(redactPathSegment),
+    why: finding.why,
+    fix: finding.fix,
+    evidence_types: Array.from(new Set(finding.evidence.map((item) => item.type))).sort(),
+    target_label: finding.target_label ? redactTargetLabel(finding.target_label) : null
+  };
+}
+
+export function redactPathSegment(segment) {
+  return SAFE_PATH_SEGMENTS.has(segment) ? segment : "component";
+}
+
+export function redactTargetLabel(label) {
+  if (!label) {
+    return null;
+  }
+
+  if (label.startsWith("Project config")) {
+    return "project config";
+  }
+
+  if (label.includes("Claude")) {
+    return "Claude config";
+  }
+
+  if (label.includes("Cursor")) {
+    return "Cursor config";
+  }
+
+  if (label.includes("Codex")) {
+    return "Codex config";
+  }
+
+  return "target";
 }
 
 const SAFE_PATH_SEGMENTS = new Set([
@@ -59,7 +104,3 @@ const SAFE_PATH_SEGMENTS = new Set([
   "unknown_publisher",
   "web_access"
 ]);
-
-function redactPathSegment(segment) {
-  return SAFE_PATH_SEGMENTS.has(segment) ? segment : "component";
-}

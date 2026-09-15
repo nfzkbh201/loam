@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { scanTarget } from "../src/scanner.mjs";
 import { buildMarkdownReport } from "../src/report/markdown.mjs";
+import { buildRedactedMarkdownReport } from "../src/report/redacted-markdown.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
 
 function usage() {
@@ -80,13 +81,16 @@ try {
   fs.mkdirSync(outDir, { recursive: true });
 
   const markdownPath = path.join(outDir, "agentsec-report.md");
+  const redactedMarkdownPath = path.join(outDir, "agentsec-redacted-report.md");
   const researchPath = path.join(outDir, "agentsec-research.json");
 
   fs.writeFileSync(markdownPath, buildMarkdownReport(displayResult));
+  fs.writeFileSync(redactedMarkdownPath, buildRedactedMarkdownReport(result));
   fs.writeFileSync(researchPath, JSON.stringify(buildResearchExport(result), null, 2));
 
   console.log("Private scan complete.");
   console.log(`Markdown report: ${markdownPath}`);
+  console.log(`Redacted Markdown report: ${redactedMarkdownPath}`);
   console.log(`Redacted research export: ${researchPath}`);
   console.log("");
   console.log(

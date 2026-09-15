@@ -24,6 +24,7 @@ node ./src/cli.mjs scan-known .
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk
 node ./src/cli.mjs scan ./fixtures/unknown-mcp-risk --json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report.md
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-markdown public-report.md
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif agentsec.sarif
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research agentsec-research.json
 node ./src/cli.mjs scan ./fixtures/repo-write-deploy-risk --fail-on critical
@@ -108,6 +109,15 @@ To scan existing discovered config locations in one combined report:
 node ./src/cli.mjs scan-known . --markdown agentsec-report.md --research agentsec-research.json
 ```
 
+Add a human-readable redacted report for safe sharing:
+
+```bash
+node ./src/cli.mjs scan-known . \
+  --markdown agentsec-report.md \
+  --redacted-markdown public-report.md \
+  --research agentsec-research.json
+```
+
 ## Demo Fixtures
 
 The `fixtures/` directory contains intentionally vulnerable agent setups:
@@ -128,6 +138,7 @@ The `fixtures/` directory contains intentionally vulnerable agent setups:
 - terminal report
 - JSON report
 - Markdown report for PR comments
+- redacted Markdown report for sharing anonymized findings
 - SARIF report for security tooling
 - redacted research export for aggregate studies
 

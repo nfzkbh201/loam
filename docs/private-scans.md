@@ -18,6 +18,8 @@ node ./src/cli.mjs scan /path/to/project --markdown agentsec-report.md
 
 Share `agentsec-report.md` privately with the owner.
 
+The private scan wrapper also creates `agentsec-redacted-report.md`, which is intended for sharing anonymized findings after the owner approves.
+
 ## Redacted Research Export
 
 Only request this with permission.

@@ -4,6 +4,7 @@ import path from "node:path";
 import { discoverTargets } from "./discovery.mjs";
 import { scanTarget, scanTargets } from "./scanner.mjs";
 import { buildMarkdownReport } from "./report/markdown.mjs";
+import { buildRedactedMarkdownReport } from "./report/redacted-markdown.mjs";
 import { buildResearchExport } from "./report/research.mjs";
 import { buildSarifReport } from "./report/sarif.mjs";
 import { printDiscoveryReport } from "./report/discovery-terminal.mjs";
@@ -21,8 +22,8 @@ function usage() {
 
 Usage:
   agentsec discover [path] [--json]
-  agentsec scan-known [path] [--json] [--markdown <file>] [--research <file>] [--fail-on <severity>]
-  agentsec scan <path> [--json] [--markdown <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
+  agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--research <file>] [--fail-on <severity>]
+  agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
 
 Examples:
   agentsec discover .
@@ -30,6 +31,7 @@ Examples:
   agentsec scan .
   agentsec scan ./fixtures/browser-shell-risk --json
   agentsec scan . --markdown agentsec-report.md
+  agentsec scan . --redacted-markdown public-report.md
   agentsec scan . --sarif agentsec.sarif
   agentsec scan . --research agentsec-research.json
   agentsec scan . --fail-on critical
@@ -49,6 +51,7 @@ function parseArgs(argv) {
     const options = {
       json: false,
       markdown: null,
+      redactedMarkdown: null,
       research: null,
       failOn: null
     };
@@ -67,6 +70,16 @@ function parseArgs(argv) {
           return { error: "--markdown requires an output file path." };
         }
         options.markdown = markdownPath;
+        i += 1;
+        continue;
+      }
+
+      if (command === "scan-known" && arg === "--redacted-markdown") {
+        const markdownPath = args[i + 1];
+        if (!markdownPath || markdownPath.startsWith("-")) {
+          return { error: "--redacted-markdown requires an output file path." };
+        }
+        options.redactedMarkdown = markdownPath;
         i += 1;
         continue;
       }
@@ -109,6 +122,7 @@ function parseArgs(argv) {
   const options = {
     json: false,
     markdown: null,
+    redactedMarkdown: null,
     sarif: null,
     research: null,
     failOn: null
@@ -128,6 +142,16 @@ function parseArgs(argv) {
         return { error: "--markdown requires an output file path." };
       }
       options.markdown = markdownPath;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--redacted-markdown") {
+      const markdownPath = args[i + 1];
+      if (!markdownPath || markdownPath.startsWith("-")) {
+        return { error: "--redacted-markdown requires an output file path." };
+      }
+      options.redactedMarkdown = markdownPath;
       i += 1;
       continue;
     }
@@ -217,6 +241,12 @@ try {
     const outputPath = path.resolve(parsed.options.markdown);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, buildMarkdownReport(result));
+  }
+
+  if (parsed.options.redactedMarkdown) {
+    const outputPath = path.resolve(parsed.options.redactedMarkdown);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, buildRedactedMarkdownReport(result));
   }
 
   if (parsed.options.sarif) {

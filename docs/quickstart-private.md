@@ -29,12 +29,14 @@ Discovery only checks whether known config paths exist. It does not read file co
 ```bash
 node ./src/cli.mjs scan-known . \
   --markdown agentsec-report.md \
+  --redacted-markdown agentsec-redacted-report.md \
   --research agentsec-research.json
 ```
 
 This scans discovered config locations and writes:
 
 - `agentsec-report.md`: private Markdown report
+- `agentsec-redacted-report.md`: redacted Markdown report for sharing
 - `agentsec-research.json`: redacted aggregate export, only share with permission
 
 ## Run A Specific Project Scan
