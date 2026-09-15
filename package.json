@@ -3,9 +3,41 @@
   "version": "0.1.0",
   "description": "A local scanner for risky AI agent and MCP toolchains.",
   "type": "module",
+  "license": "MIT",
+  "private": true,
+  "author": "Noor Zeb Khan",
+  "homepage": "https://github.com/nfzkbh201/agentsec#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/nfzkbh201/agentsec.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nfzkbh201/agentsec/issues"
+  },
+  "keywords": [
+    "ai-agent",
+    "agent-security",
+    "mcp",
+    "supply-chain",
+    "security",
+    "abom"
+  ],
   "bin": {
     "agentsec": "./src/cli.mjs"
   },
+  "files": [
+    "action.yml",
+    "docs",
+    "examples",
+    "fixtures",
+    "scripts",
+    "src",
+    "test",
+    "DESIGN_PARTNER.md",
+    "LICENSE",
+    "README.md",
+    "SECURITY.md"
+  ],
   "scripts": {
     "discover": "node ./src/cli.mjs discover .",
     "scan": "node ./src/cli.mjs scan .",

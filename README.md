@@ -137,6 +137,7 @@ The research export strips server names, package names, command args, config pat
 
 ```bash
 node --test
+npm pack --dry-run
 ```
 
 ## Research Use
