@@ -20,9 +20,12 @@ cd loam
 
 ```bash
 node ./src/cli.mjs discover .
+node ./src/cli.mjs doctor .
 ```
 
 Discovery only checks whether known config paths exist. It does not read file contents.
+
+`doctor` stays scoped to the project, summarizes found and missing agent surfaces, and recommends the next command for a scan pack.
 
 ## Run A Combined Scan
 

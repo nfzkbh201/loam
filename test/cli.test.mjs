@@ -48,3 +48,45 @@ test("scan-pack writes private, redacted, ABOM, research, and summary outputs", 
   assert.equal(redactedReport.includes("# Loam Redacted Risk Report"), true);
   assert.equal(research.redacted, true);
 });
+
+test("doctor reports found surfaces and a scan-pack recommendation", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      cli,
+      "doctor",
+      path.join(fixtures, "cursor-rules-risk")
+    ],
+    {
+      cwd: root,
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.includes("Loam Doctor"), true);
+  assert.equal(result.stdout.includes("Cursor project rules"), true);
+  assert.equal(result.stdout.includes("scan-pack"), true);
+});
+
+test("doctor json reports machine-readable readiness", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      cli,
+      "doctor",
+      path.join(fixtures, "safe-agent"),
+      "--json"
+    ],
+    {
+      cwd: root,
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.status, "ready_for_scan_pack");
+  assert.equal(report.found.some((surface) => surface.label === "Project config (.mcp.json)"), true);
+  assert.equal(report.recommended_command.includes("scan-pack"), true);
+});

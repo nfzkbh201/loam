@@ -34,7 +34,9 @@
     "scripts",
     "src",
     "test",
+    "DEMO.md",
     "DESIGN_PARTNER.md",
+    "FOUNDER_OUTREACH.md",
     "LICENSE",
     "README.md",
     "SECURITY.md"

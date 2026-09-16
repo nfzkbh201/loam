@@ -20,6 +20,7 @@ It creates a small Agent Bill of Materials (ABOM) and flags critical risk paths 
 ```bash
 cd loam
 node ./src/cli.mjs discover .
+node ./src/cli.mjs doctor .
 node ./src/cli.mjs scan-pack . --label "cursor-user-001"
 node ./src/cli.mjs scan-known .
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk
@@ -154,9 +155,12 @@ Use discovery to find likely agent/MCP config locations before choosing what to 
 ```bash
 node ./src/cli.mjs discover .
 node ./src/cli.mjs discover . --json
+node ./src/cli.mjs doctor .
 ```
 
 Discovery only checks whether known config paths exist. It does not read or upload their contents.
+
+Use `doctor` as a friendlier preflight before asking someone to run a scan pack. It stays scoped to the project, summarizes found and missing agent surfaces, and prints the recommended next command.
 
 To scan existing discovered config locations in one combined report:
 

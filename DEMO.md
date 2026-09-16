@@ -3,6 +3,7 @@
 Run from the repo root:
 
 ```bash
+node ./src/cli.mjs doctor ./fixtures/cursor-rules-risk
 node ./src/cli.mjs scan ./fixtures/cursor-rules-risk
 node ./src/cli.mjs scan ./fixtures/claude-instructions-risk
 ```

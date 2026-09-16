@@ -29,6 +29,7 @@ function usage() {
 
 Usage:
   loam discover [path] [--json]
+  loam doctor [path] [--json]
   loam scan-pack <path> [--out <dir>] [--label <text>]
   loam scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
   loam scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
@@ -40,6 +41,7 @@ Usage:
 
 Examples:
   loam discover .
+  loam doctor .
   loam scan-pack . --label "cursor-user-001"
   loam scan-known .
   loam scan .
@@ -390,6 +392,26 @@ function parseArgs(argv) {
     return { command, target, options };
   }
 
+  if (command === "doctor") {
+    const target = args[0] && !args[0].startsWith("-") ? args.shift() : ".";
+    const options = {
+      json: false
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--json") {
+        options.json = true;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, target, options };
+  }
+
   if (command === "discover" || command === "scan-known") {
     const target = args[0] && !args[0].startsWith("-") ? args.shift() : ".";
     const options = {
@@ -716,6 +738,17 @@ try {
     process.exit(0);
   }
 
+  if (parsed.command === "doctor") {
+    const report = buildDoctorReport(parsed.target);
+    if (parsed.options.json) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      printDoctorReport(report);
+    }
+
+    process.exit(0);
+  }
+
   if (parsed.command === "scan-pack") {
     const result = scanTarget(parsed.target);
     const output = writeScanPack({ result, target: parsed.target, options: parsed.options });
@@ -846,6 +879,129 @@ function readJsonFile(filePath) {
   } catch (error) {
     throw new Error(`Could not read JSON file ${resolved}: ${error.message}`);
   }
+}
+
+function buildDoctorReport(target) {
+  const root = path.resolve(target);
+  const discovered = discoverTargets({ root });
+  const projectDiscovered = discovered.filter((item) => path.resolve(item.scan_hint) === root);
+  const extraSurfaces = discoverProjectSurfaces(root);
+  const found = [
+    ...projectDiscovered.filter((item) => item.exists).map(surfaceFromDiscovery),
+    ...extraSurfaces.filter((item) => item.exists)
+  ].sort((a, b) => a.label.localeCompare(b.label));
+  const missing = [
+    ...projectDiscovered.filter((item) => !item.exists).map(surfaceFromDiscovery),
+    ...extraSurfaces.filter((item) => !item.exists)
+  ].sort((a, b) => a.label.localeCompare(b.label));
+  const ready = found.length > 0;
+
+  return {
+    tool: "loam",
+    target: root,
+    status: ready ? "ready_for_scan_pack" : "low_signal",
+    found,
+    missing,
+    global_found: [],
+    recommended_command: `node ./src/cli.mjs scan-pack ${shellQuote(root)} --label "design-partner-001"`,
+    notes: ready
+      ? [
+          "Loam found project-level agent surfaces it can scan.",
+          "Doctor stays scoped to this project; use discover for broader config inventory.",
+          "Run scan-pack to create private and redacted outputs."
+        ]
+      : [
+          "Loam did not find known project-level agent surfaces.",
+          "Doctor stays scoped to this project; use discover for broader config inventory.",
+          "You can still run scan-pack, but the output may be low signal."
+        ]
+  };
+}
+
+function discoverProjectSurfaces(root) {
+  return [
+    {
+      type: "package_json",
+      label: "package.json scripts",
+      path: path.join(root, "package.json"),
+      exists: isFile(path.join(root, "package.json"))
+    },
+    {
+      type: "github_workflows",
+      label: "GitHub workflows",
+      path: path.join(root, ".github", "workflows"),
+      exists: isDirectory(path.join(root, ".github", "workflows"))
+    },
+    {
+      type: "env_file",
+      label: "env files",
+      path: root,
+      exists: [".env", ".env.local", ".env.example", ".env.sample"].some((name) => isFile(path.join(root, name)))
+    }
+  ];
+}
+
+function surfaceFromDiscovery(item) {
+  return {
+    type: item.type,
+    label: item.label,
+    path: item.path,
+    scan_hint: item.scan_hint
+  };
+}
+
+function printDoctorReport(report) {
+  console.log("Loam Doctor");
+  console.log("");
+  console.log(`Target: ${report.target}`);
+  console.log(`Status: ${report.status}`);
+  console.log("");
+  printSurfaceSection("Found", report.found);
+  printSurfaceSection("Not found", report.missing);
+
+  if (report.global_found.length > 0) {
+    printSurfaceSection("Global configs also present", report.global_found);
+  }
+
+  console.log("Recommended next step:");
+  console.log(report.recommended_command);
+  console.log("");
+  console.log("Notes:");
+  for (const note of report.notes) {
+    console.log(`- ${note}`);
+  }
+}
+
+function printSurfaceSection(title, surfaces) {
+  console.log(`${title}:`);
+  if (surfaces.length === 0) {
+    console.log("- none");
+  } else {
+    for (const surface of surfaces) {
+      console.log(`- ${surface.label}`);
+    }
+  }
+  console.log("");
+}
+
+function isFile(filePath) {
+  try {
+    return fs.statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function isDirectory(filePath) {
+  try {
+    return fs.statSync(filePath).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function shellQuote(value) {
+  return `'${String(value).replaceAll("'", "'\\''")}'`;
 }
 
 function writeScanPack({ result, target, options }) {
