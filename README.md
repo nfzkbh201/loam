@@ -113,6 +113,17 @@ node ./src/cli.mjs scan . --policy .agentsec/policy.json
 
 Policies can deny capabilities, require approval for sensitive capabilities, restrict MCP servers to an allowlist, deny capability combinations such as `web_access -> shell_exec`, and track temporary approved exceptions with expiry dates.
 
+Use the policy workflow commands to avoid hand-editing JSON:
+
+```bash
+node ./src/cli.mjs init-policy
+node ./src/cli.mjs approve capability shell_exec \
+  --reason "Local dev agent only" \
+  --approved-by noor \
+  --expires 2026-12-31
+node ./src/cli.mjs list-approvals
+```
+
 ## Current Scope
 
 The prototype scans:

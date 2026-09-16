@@ -88,7 +88,7 @@ export function validatePolicy(policy) {
       throw new Error("policy.approvals entries must include subject.");
     }
 
-    if (approval.type === "risk_path" && !normalizeRiskPath(approval.subject)) {
+    if (approval.type === "risk_path" && normalizeRiskPath(approval.subject).length === 0) {
       throw new Error("policy.approvals risk_path subjects must be strings or arrays.");
     }
 

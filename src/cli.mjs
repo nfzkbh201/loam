@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { diffAboms, shouldFailDiff } from "./diff.mjs";
 import { discoverTargets } from "./discovery.mjs";
+import { addApproval, DEFAULT_POLICY_PATH, initPolicyFile, listApprovals } from "./policy-file.mjs";
 import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "./policy.mjs";
 import { scanTarget, scanTargets } from "./scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "./report/abom.mjs";
@@ -30,6 +31,9 @@ Usage:
   agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--fail-on <severity>]
   agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--fail-on <severity>]
   agentsec diff --baseline <file> --current <file> [--json] [--markdown <file>] [--fail-on <severity>]
+  agentsec init-policy [--policy <file>] [--force]
+  agentsec approve <capability|mcp_server|risk_path> <subject> --reason <text> --approved-by <name> --expires <date> [--policy <file>]
+  agentsec list-approvals [--policy <file>] [--json]
 
 Examples:
   agentsec discover .
@@ -45,6 +49,9 @@ Examples:
   agentsec scan . --policy .agentsec/policy.json
   agentsec scan . --fail-on critical
   agentsec diff --baseline main-abom.json --current agentsec-abom.json --fail-on high
+  agentsec init-policy
+  agentsec approve capability shell_exec --reason "Local dev agent only" --approved-by noor --expires 2026-12-31
+  agentsec list-approvals
 `);
 }
 
@@ -54,6 +61,153 @@ function parseArgs(argv) {
 
   if (!command || command === "--help" || command === "-h") {
     return { help: true };
+  }
+
+  if (command === "init-policy") {
+    const options = {
+      policy: DEFAULT_POLICY_PATH,
+      force: false
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--policy") {
+        const policyPath = args[i + 1];
+        if (!policyPath || policyPath.startsWith("-")) {
+          return { error: "--policy requires a JSON policy file path." };
+        }
+        options.policy = policyPath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--force") {
+        options.force = true;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, options };
+  }
+
+  if (command === "approve") {
+    const type = args.shift();
+    if (!["capability", "mcp_server", "risk_path"].includes(type)) {
+      return { error: "approve type must be one of: capability, mcp_server, risk_path." };
+    }
+
+    const subjectParts = [];
+    while (args.length > 0 && !args[0].startsWith("-")) {
+      subjectParts.push(args.shift());
+    }
+
+    const subject = subjectParts.join(" ").trim();
+    if (!subject) {
+      return { error: "approve requires a subject." };
+    }
+
+    const options = {
+      policy: DEFAULT_POLICY_PATH,
+      reason: null,
+      approvedBy: null,
+      expires: null
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--policy") {
+        const policyPath = args[i + 1];
+        if (!policyPath || policyPath.startsWith("-")) {
+          return { error: "--policy requires a JSON policy file path." };
+        }
+        options.policy = policyPath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--reason") {
+        const reason = args[i + 1];
+        if (!reason || reason.startsWith("-")) {
+          return { error: "--reason requires text." };
+        }
+        options.reason = reason;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--approved-by") {
+        const approvedBy = args[i + 1];
+        if (!approvedBy || approvedBy.startsWith("-")) {
+          return { error: "--approved-by requires a name." };
+        }
+        options.approvedBy = approvedBy;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--expires") {
+        const expires = args[i + 1];
+        if (!expires || expires.startsWith("-")) {
+          return { error: "--expires requires a date." };
+        }
+        if (Number.isNaN(Date.parse(expires))) {
+          return { error: "--expires must be a valid date." };
+        }
+        options.expires = expires;
+        i += 1;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    if (!options.reason) {
+      return { error: "approve requires --reason." };
+    }
+
+    if (!options.approvedBy) {
+      return { error: "approve requires --approved-by." };
+    }
+
+    if (!options.expires) {
+      return { error: "approve requires --expires." };
+    }
+
+    return { command, type, subject, options };
+  }
+
+  if (command === "list-approvals") {
+    const options = {
+      policy: DEFAULT_POLICY_PATH,
+      json: false
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--policy") {
+        const policyPath = args[i + 1];
+        if (!policyPath || policyPath.startsWith("-")) {
+          return { error: "--policy requires a JSON policy file path." };
+        }
+        options.policy = policyPath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--json") {
+        options.json = true;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, options };
   }
 
   if (command === "diff") {
@@ -353,6 +507,37 @@ if (parsed.error) {
 }
 
 try {
+  if (parsed.command === "init-policy") {
+    const result = initPolicyFile({ policyPath: parsed.options.policy, force: parsed.options.force });
+    console.log(result.message);
+    process.exit(0);
+  }
+
+  if (parsed.command === "approve") {
+    const result = addApproval({
+      policyPath: parsed.options.policy,
+      approval: {
+        type: parsed.type,
+        subject: parsed.subject,
+        reason: parsed.options.reason,
+        approved_by: parsed.options.approvedBy,
+        expires: parsed.options.expires
+      }
+    });
+    console.log(result.message);
+    process.exit(0);
+  }
+
+  if (parsed.command === "list-approvals") {
+    const result = listApprovals({ policyPath: parsed.options.policy });
+    if (parsed.options.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      printApprovals(result);
+    }
+    process.exit(0);
+  }
+
   if (parsed.command === "diff") {
     const diff = diffAboms({
       baseline: readJsonFile(parsed.options.baseline),
@@ -502,4 +687,30 @@ function readJsonFile(filePath) {
   } catch (error) {
     throw new Error(`Could not read JSON file ${resolved}: ${error.message}`);
   }
+}
+
+function printApprovals(result) {
+  console.log(`Policy: ${result.path}`);
+  console.log(`Active approvals: ${result.active.length}`);
+
+  for (const approval of result.active) {
+    console.log(formatApproval(approval));
+  }
+
+  console.log(`Expired approvals: ${result.expired.length}`);
+  for (const approval of result.expired) {
+    console.log(formatApproval(approval));
+  }
+}
+
+function formatApproval(approval) {
+  const metadata = [
+    approval.approved_by ? `by ${approval.approved_by}` : null,
+    approval.expires ? `until ${approval.expires}` : null,
+    approval.reason ? `for ${approval.reason}` : null
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return `- ${approval.type}: ${approval.subject}${metadata ? ` (${metadata})` : ""}`;
 }

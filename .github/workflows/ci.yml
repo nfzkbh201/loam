@@ -28,6 +28,9 @@ jobs:
           node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown /tmp/agentsec-report.md --abom /tmp/agentsec-current-abom.json --research /tmp/agentsec-research.json
           node ./src/cli.mjs diff --baseline /tmp/agentsec-baseline-abom.json --current /tmp/agentsec-current-abom.json --markdown /tmp/agentsec-diff.md
           node ./src/cli.mjs scan ./fixtures/browser-shell-risk --policy examples/policy.json --markdown /tmp/agentsec-policy-report.md || test "$?" -eq 1
+          node ./src/cli.mjs init-policy --policy /tmp/agentsec-policy.json
+          node ./src/cli.mjs approve capability shell_exec --policy /tmp/agentsec-policy.json --reason "CI fixture" --approved-by ci --expires 2099-12-31
+          node ./src/cli.mjs list-approvals --policy /tmp/agentsec-policy.json --json > /tmp/agentsec-approvals.json
 
       - name: Verify package
         run: npm pack --dry-run

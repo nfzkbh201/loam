@@ -35,6 +35,18 @@ Run with policy:
 node ./src/cli.mjs scan . --policy .agentsec/policy.json
 ```
 
+Create the default policy file:
+
+```bash
+node ./src/cli.mjs init-policy
+```
+
+Use a custom path:
+
+```bash
+node ./src/cli.mjs init-policy --policy ./team-agent-policy.json
+```
+
 Write a PR-ready report with policy violations:
 
 ```bash
@@ -92,6 +104,34 @@ Supported approval types:
 - `risk_path`: approves a matching `deny_risk_paths` combination.
 
 Expired approvals are treated as policy violations. `deny_capabilities` remains a hard deny and is not bypassed by approvals.
+
+Add approvals from the CLI instead of hand-editing JSON:
+
+```bash
+node ./src/cli.mjs approve capability shell_exec \
+  --reason "Allowed for local development agent only" \
+  --approved-by noor \
+  --expires 2026-12-31
+
+node ./src/cli.mjs approve mcp_server mcp-shell \
+  --reason "Temporary design partner fixture" \
+  --approved-by noor \
+  --expires 2026-12-31
+
+node ./src/cli.mjs approve risk_path "web_access -> shell_exec" \
+  --reason "Reviewed isolated sandbox" \
+  --approved-by noor \
+  --expires 2026-12-31
+```
+
+List approvals:
+
+```bash
+node ./src/cli.mjs list-approvals
+node ./src/cli.mjs list-approvals --json
+```
+
+`approve` creates `.agentsec/policy.json` from the example policy if it does not exist. It avoids duplicate active approvals for the same type and subject. If an old approval has expired, adding a new approval for the same subject creates a fresh current approval.
 
 ## GitHub Action
 
