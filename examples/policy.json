@@ -11,5 +11,6 @@
   "deny_risk_paths": [
     "web_access -> shell_exec",
     "web_access -> secrets_access"
-  ]
+  ],
+  "approvals": []
 }

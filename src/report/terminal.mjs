@@ -55,6 +55,21 @@ export function printTerminalReport(result) {
         console.log(`- ${severity(violation.severity)} ${violation.title}`);
       }
     }
+
+    if (result.policy.approved_exceptions?.length > 0) {
+      console.log("");
+      console.log(bold("Approved Exceptions"));
+      for (const approval of result.policy.approved_exceptions) {
+        const metadata = [
+          approval.approved_by ? `by ${approval.approved_by}` : null,
+          approval.expires ? `until ${approval.expires}` : null,
+          approval.reason ? `for ${approval.reason}` : null
+        ]
+          .filter(Boolean)
+          .join(", ");
+        console.log(`- ${approval.type}: ${approval.subject}${metadata ? ` (${metadata})` : ""}`);
+      }
+    }
   }
 
   if (result.findings.length === 0) {

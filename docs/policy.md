@@ -24,7 +24,8 @@ Example:
   "deny_risk_paths": [
     "web_access -> shell_exec",
     "web_access -> secrets_access"
-  ]
+  ],
+  "approvals": []
 }
 ```
 
@@ -50,6 +51,47 @@ node ./src/cli.mjs scan . \
 - `approved_capabilities`: approved subset of `require_approval_for`.
 - `allowed_mcp_servers`: optional allowlist of MCP server package names or server names.
 - `deny_risk_paths`: capability combinations that should not exist in the same agent/toolchain.
+- `approvals`: reviewed exceptions for capabilities, MCP servers, or risk paths.
+
+## Approvals
+
+Approvals let a team accept a specific risky item temporarily without weakening the whole policy:
+
+```json
+{
+  "approvals": [
+    {
+      "type": "capability",
+      "subject": "shell_exec",
+      "reason": "Allowed for local development agent only",
+      "approved_by": "noor",
+      "expires": "2026-12-31"
+    },
+    {
+      "type": "mcp_server",
+      "subject": "mcp-shell",
+      "reason": "Temporary design partner fixture",
+      "approved_by": "noor",
+      "expires": "2026-12-31"
+    },
+    {
+      "type": "risk_path",
+      "subject": "web_access -> shell_exec",
+      "reason": "Reviewed isolated sandbox",
+      "approved_by": "noor",
+      "expires": "2026-12-31"
+    }
+  ]
+}
+```
+
+Supported approval types:
+
+- `capability`: approves a capability listed in `require_approval_for`.
+- `mcp_server`: approves an MCP server outside `allowed_mcp_servers`, matching package name or server name.
+- `risk_path`: approves a matching `deny_risk_paths` combination.
+
+Expired approvals are treated as policy violations. `deny_capabilities` remains a hard deny and is not bypassed by approvals.
 
 ## GitHub Action
 

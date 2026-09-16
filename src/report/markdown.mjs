@@ -89,6 +89,23 @@ export function buildMarkdownReport(result) {
 
       lines.push("");
     }
+
+    if (result.policy.approved_exceptions?.length > 0) {
+      lines.push("### Approved Exceptions");
+      lines.push("");
+      lines.push("| Type | Subject | Approved by | Expires | Reason |");
+      lines.push("| --- | --- | --- | --- | --- |");
+
+      for (const approval of result.policy.approved_exceptions) {
+        lines.push(
+          `| ${escapeCell(approval.type)} | ${escapeCell(approval.subject)} | ` +
+            `${escapeCell(approval.approved_by || "unknown")} | ${escapeCell(approval.expires || "none")} | ` +
+            `${escapeCell(approval.reason || "none")} |`
+        );
+      }
+
+      lines.push("");
+    }
   }
 
   if (result.findings.length === 0) {

@@ -111,7 +111,7 @@ cp examples/policy.json .agentsec/policy.json
 node ./src/cli.mjs scan . --policy .agentsec/policy.json
 ```
 
-Policies can deny capabilities, require approval for sensitive capabilities, restrict MCP servers to an allowlist, and deny capability combinations such as `web_access -> shell_exec`.
+Policies can deny capabilities, require approval for sensitive capabilities, restrict MCP servers to an allowlist, deny capability combinations such as `web_access -> shell_exec`, and track temporary approved exceptions with expiry dates.
 
 ## Current Scope
 

@@ -3,7 +3,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { diffAboms, shouldFailDiff } from "../src/diff.mjs";
-import { evaluatePolicy, shouldFailPolicy, validatePolicy } from "../src/policy.mjs";
+import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "../src/policy.mjs";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
 import { buildDiffMarkdownReport } from "../src/report/diff-markdown.mjs";
@@ -212,4 +212,81 @@ test("policy flags denied and unapproved agent capabilities", () => {
   assert.equal(shouldFailPolicy(result.policy, "high"), true);
   assert.equal(markdown.includes("## Policy"), true);
   assert.equal(markdown.includes("Denied capability present: shell_exec"), true);
+});
+
+test("policy approvals allow reviewed exceptions and report metadata", () => {
+  const result = scanTarget(path.join(fixtures, "browser-shell-risk"));
+  const policy = {
+    name: "reviewed local agent",
+    fail_on: "high",
+    require_approval_for: ["shell_exec"],
+    allowed_mcp_servers: ["@modelcontextprotocol/server-browser"],
+    deny_risk_paths: ["web_access -> shell_exec"],
+    approvals: [
+      {
+        type: "capability",
+        subject: "shell_exec",
+        reason: "Allowed for local development only",
+        approved_by: "noor",
+        expires: "2099-12-31"
+      },
+      {
+        type: "mcp_server",
+        subject: "mcp-shell",
+        reason: "Temporary test fixture exception",
+        approved_by: "noor",
+        expires: "2099-12-31"
+      },
+      {
+        type: "risk_path",
+        subject: "web_access -> shell_exec",
+        reason: "Reviewed isolated sandbox",
+        approved_by: "noor",
+        expires: "2099-12-31"
+      }
+    ]
+  };
+
+  validatePolicy(policy);
+  result.policy = evaluatePolicy(result, policy);
+  const markdown = buildMarkdownReport(result);
+
+  assert.equal(result.policy.summary.total_violations, 0);
+  assert.equal(result.policy.approved_exceptions.length, 3);
+  assert.equal(shouldFailPolicy(result.policy, "high"), false);
+  assert.equal(
+    result.findings.some((finding) => !isFindingApprovedByPolicy(finding, result.policy)),
+    false
+  );
+  assert.equal(markdown.includes("### Approved Exceptions"), true);
+  assert.equal(markdown.includes("Allowed for local development only"), true);
+});
+
+test("policy approvals expire and become violations", () => {
+  const result = scanTarget(path.join(fixtures, "browser-shell-risk"));
+  const policy = {
+    name: "expired review",
+    fail_on: "high",
+    require_approval_for: ["shell_exec"],
+    approvals: [
+      {
+        type: "capability",
+        subject: "shell_exec",
+        reason: "Old exception",
+        approved_by: "noor",
+        expires: "2000-01-01"
+      }
+    ]
+  };
+
+  validatePolicy(policy);
+  result.policy = evaluatePolicy(result, policy);
+  const violation = result.policy.violations.find(
+    (item) => item.id === "policy-unapproved-capability-shell-exec"
+  );
+
+  assert.ok(violation);
+  assert.equal(violation.expired_approval.subject, "shell_exec");
+  assert.equal(result.policy.approved_exceptions.length, 0);
+  assert.equal(shouldFailPolicy(result.policy, "high"), true);
 });

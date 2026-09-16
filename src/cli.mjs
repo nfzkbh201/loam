@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { diffAboms, shouldFailDiff } from "./diff.mjs";
 import { discoverTargets } from "./discovery.mjs";
-import { evaluatePolicy, shouldFailPolicy, validatePolicy } from "./policy.mjs";
+import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "./policy.mjs";
 import { scanTarget, scanTargets } from "./scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "./report/abom.mjs";
 import { buildMarkdownReport } from "./report/markdown.mjs";
@@ -459,7 +459,11 @@ try {
 
   if (parsed.options.failOn) {
     const threshold = SEVERITY_RANK[parsed.options.failOn];
-    const findingsFailed = result.findings.some((finding) => SEVERITY_RANK[finding.severity] >= threshold);
+    const findingsFailed = result.findings.some(
+      (finding) =>
+        SEVERITY_RANK[finding.severity] >= threshold &&
+        !isFindingApprovedByPolicy(finding, result.policy)
+    );
     const policyFailed = result.policy ? shouldFailPolicy(result.policy, parsed.options.failOn) : false;
     if (findingsFailed || policyFailed) {
       process.exit(1);
