@@ -16,7 +16,7 @@ const SEVERITY_COLOR = {
 };
 
 export function printDiffReport(diff) {
-  console.log(bold("agentsec ABOM diff"));
+  console.log(bold("loam ABOM diff"));
   console.log(`${dim("Baseline:")} ${diff.baseline.target || "unknown target"}`);
   console.log(`${dim("Current:")} ${diff.current.target || "unknown target"}`);
   console.log(

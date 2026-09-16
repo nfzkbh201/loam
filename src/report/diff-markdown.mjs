@@ -1,7 +1,7 @@
 export function buildDiffMarkdownReport(diff) {
   const lines = [];
 
-  lines.push("# AgentSec ABOM Diff");
+  lines.push("# Loam ABOM Diff");
   lines.push("");
   lines.push(`**Baseline:** ${formatMaybeCode(diff.baseline.target || "unknown target")}`);
   lines.push(`**Current:** ${formatMaybeCode(diff.current.target || "unknown target")}`);

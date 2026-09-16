@@ -28,27 +28,27 @@ Discovery only checks whether known config paths exist. It does not read file co
 
 ```bash
 node ./src/cli.mjs scan-known . \
-  --markdown agentsec-report.md \
-  --redacted-markdown agentsec-redacted-report.md \
-  --abom agentsec-abom.json \
-  --redacted-abom agentsec-redacted-abom.json \
-  --research agentsec-research.json
+  --markdown loam-report.md \
+  --redacted-markdown loam-redacted-report.md \
+  --abom loam-abom.json \
+  --redacted-abom loam-redacted-abom.json \
+  --research loam-research.json
 ```
 
 This scans discovered config locations and writes:
 
-- `agentsec-report.md`: private Markdown report
-- `agentsec-redacted-report.md`: redacted Markdown report for sharing
-- `agentsec-abom.json`: private Agent Bill of Materials
-- `agentsec-redacted-abom.json`: redacted Agent Bill of Materials
-- `agentsec-research.json`: redacted aggregate export, only share with permission
+- `loam-report.md`: private Markdown report
+- `loam-redacted-report.md`: redacted Markdown report for sharing
+- `loam-abom.json`: private Agent Bill of Materials
+- `loam-redacted-abom.json`: redacted Agent Bill of Materials
+- `loam-research.json`: redacted aggregate export, only share with permission
 
 ## Run A Specific Project Scan
 
 ```bash
 node ./src/cli.mjs scan /path/to/project \
-  --markdown agentsec-report.md \
-  --research agentsec-research.json
+  --markdown loam-report.md \
+  --research loam-research.json
 ```
 
 ## Private Scan Wrapper

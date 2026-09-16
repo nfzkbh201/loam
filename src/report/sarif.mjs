@@ -21,7 +21,7 @@ export function buildSarifReport(result) {
         text: finding.fix
       },
       properties: {
-        tags: ["ai-agent", "mcp", "agentsec"],
+        tags: ["ai-agent", "mcp", "loam"],
         precision: "medium",
         securitySeverity: severityToSecurityScore(finding.severity)
       }
@@ -35,7 +35,7 @@ export function buildSarifReport(result) {
       {
         tool: {
           driver: {
-            name: "agentsec",
+            name: "loam",
             rules
           }
         },

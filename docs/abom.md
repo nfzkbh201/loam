@@ -45,21 +45,21 @@ untrusted webpage
 Private/internal ABOM:
 
 ```bash
-node ./src/cli.mjs scan /path/to/project --abom agentsec-abom.json
+node ./src/cli.mjs scan /path/to/project --abom loam-abom.json
 ```
 
 Redacted/shareable ABOM:
 
 ```bash
-node ./src/cli.mjs scan /path/to/project --redacted-abom agentsec-redacted-abom.json
+node ./src/cli.mjs scan /path/to/project --redacted-abom loam-redacted-abom.json
 ```
 
 Combined known-config ABOM:
 
 ```bash
 node ./src/cli.mjs scan-known . \
-  --abom agentsec-abom.json \
-  --redacted-abom agentsec-redacted-abom.json
+  --abom loam-abom.json \
+  --redacted-abom loam-redacted-abom.json
 ```
 
 The full ABOM may include config filenames, server names, package names, commands, args, env key names, and path arguments. Treat it as private.
@@ -71,22 +71,22 @@ The redacted ABOM preserves aggregate counts, capability labels, target type lab
 Compare an approved ABOM baseline against a new scan:
 
 ```bash
-mkdir -p .agentsec
-node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json
+mkdir -p .loam
+node ./src/cli.mjs scan . --abom .loam/baseline-abom.json
 
-node ./src/cli.mjs scan . --abom agentsec-abom.json
+node ./src/cli.mjs scan . --abom loam-abom.json
 node ./src/cli.mjs diff \
-  --baseline .agentsec/baseline-abom.json \
-  --current agentsec-abom.json
+  --baseline .loam/baseline-abom.json \
+  --current loam-abom.json
 ```
 
 Use `--fail-on` to turn the diff into a CI gate:
 
 ```bash
 node ./src/cli.mjs diff \
-  --baseline .agentsec/baseline-abom.json \
-  --current agentsec-abom.json \
-  --markdown agentsec-diff.md \
+  --baseline .loam/baseline-abom.json \
+  --current loam-abom.json \
+  --markdown loam-diff.md \
   --fail-on high
 ```
 
@@ -105,14 +105,14 @@ Use full ABOMs for precise diffs. Redacted ABOMs are better for sharing aggregat
 The GitHub Action looks for this baseline by default:
 
 ```text
-.agentsec/baseline-abom.json
+.loam/baseline-abom.json
 ```
 
 Create or refresh it when the current agent/toolchain state has been reviewed and approved:
 
 ```bash
-mkdir -p .agentsec
-node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json
+mkdir -p .loam
+node ./src/cli.mjs scan . --abom .loam/baseline-abom.json
 ```
 
-On pull requests, the Action generates a current ABOM, compares it with the baseline, writes the diff to the job summary, and updates the AgentSec PR comment.
+On pull requests, the Action generates a current ABOM, compares it with the baseline, writes the diff to the job summary, and updates the Loam PR comment.

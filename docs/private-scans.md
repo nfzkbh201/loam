@@ -13,12 +13,12 @@ It does not upload data. It can also produce a redacted research export that str
 ## Local Report
 
 ```bash
-node ./src/cli.mjs scan /path/to/project --markdown agentsec-report.md
+node ./src/cli.mjs scan /path/to/project --markdown loam-report.md
 ```
 
-Share `agentsec-report.md` privately with the owner.
+Share `loam-report.md` privately with the owner.
 
-The private scan wrapper also creates `agentsec-redacted-report.md`, which is intended for sharing anonymized findings after the owner approves.
+The private scan wrapper also creates `loam-redacted-report.md`, which is intended for sharing anonymized findings after the owner approves.
 
 ## Append To Research Log
 
@@ -36,7 +36,7 @@ If the CSV does not exist, the script creates it with the standard header.
 Only request this with permission.
 
 ```bash
-node ./src/cli.mjs scan /path/to/project --research agentsec-research.json
+node ./src/cli.mjs scan /path/to/project --research loam-research.json
 ```
 
 The export keeps:

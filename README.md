@@ -1,6 +1,6 @@
-# agentsec
+# Loam
 
-`agentsec` is a dependency-free prototype scanner for risky AI agent and MCP toolchains.
+`loam` is a dependency-free prototype scanner for risky AI agent and MCP toolchains.
 
 It is designed for the emerging agentic supply chain: MCP servers, tools, plugins, credentials, prompts, browser access, filesystem access, and CI/CD permissions.
 
@@ -23,14 +23,14 @@ node ./src/cli.mjs discover .
 node ./src/cli.mjs scan-known .
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk
 node ./src/cli.mjs scan ./fixtures/unknown-mcp-risk --json
-node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report.md
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown loam-report.md
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-markdown public-report.md
-node ./src/cli.mjs scan ./fixtures/browser-shell-risk --abom agentsec-abom.json
-node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-abom agentsec-redacted-abom.json
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --abom loam-abom.json
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-abom loam-redacted-abom.json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --policy examples/policy.json
-node ./src/cli.mjs diff --baseline main-abom.json --current agentsec-abom.json --markdown agentsec-diff.md --fail-on high
-node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif agentsec.sarif
-node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research agentsec-research.json
+node ./src/cli.mjs diff --baseline main-abom.json --current loam-abom.json --markdown loam-diff.md --fail-on high
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif loam.sarif
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research loam-research.json
 node ./src/cli.mjs scan ./fixtures/repo-write-deploy-risk --fail-on critical
 ```
 
@@ -58,7 +58,7 @@ Separate browser-facing agents from shell tools, or require explicit approval be
 ## GitHub Action
 
 ```yaml
-name: agentsec
+name: loam
 on: [pull_request]
 
 permissions:
@@ -76,26 +76,26 @@ jobs:
           fail-on: critical
           comment: true
           diff: true
-          baseline-path: .agentsec/baseline-abom.json
-          policy-path: .agentsec/policy.json
+          baseline-path: .loam/baseline-abom.json
+          policy-path: .loam/policy.json
           github-token: ${{ github.token }}
 ```
 
-The action writes the report to the GitHub job summary and, on pull requests, creates or updates a single AgentSec comment. If `.agentsec/baseline-abom.json` exists, the comment also includes an ABOM diff against that approved baseline.
+The action writes the report to the GitHub job summary and, on pull requests, creates or updates a single Loam comment. If `.loam/baseline-abom.json` exists, the comment also includes an ABOM diff against that approved baseline.
 
 ## ABOM Diff
 
 Use ABOM diff to compare an approved baseline against a new scan:
 
 ```bash
-mkdir -p .agentsec
-node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json
+mkdir -p .loam
+node ./src/cli.mjs scan . --abom .loam/baseline-abom.json
 
-node ./src/cli.mjs scan . --abom agentsec-abom.json
+node ./src/cli.mjs scan . --abom loam-abom.json
 node ./src/cli.mjs diff \
-  --baseline .agentsec/baseline-abom.json \
-  --current agentsec-abom.json \
-  --markdown agentsec-diff.md \
+  --baseline .loam/baseline-abom.json \
+  --current loam-abom.json \
+  --markdown loam-diff.md \
   --fail-on high
 ```
 
@@ -106,10 +106,10 @@ The diff highlights added capabilities, new MCP servers, new workflows, new env 
 Add a JSON policy to encode local rules:
 
 ```bash
-mkdir -p .agentsec
-cp examples/policy.json .agentsec/policy.json
-node ./src/cli.mjs scan . --policy .agentsec/policy.json
-node ./src/cli.mjs scan . --policy .agentsec/policy.json --approval-suggestions
+mkdir -p .loam
+cp examples/policy.json .loam/policy.json
+node ./src/cli.mjs scan . --policy .loam/policy.json
+node ./src/cli.mjs scan . --policy .loam/policy.json --approval-suggestions
 ```
 
 Policies can deny capabilities, require approval for sensitive capabilities, restrict MCP servers to an allowlist, deny capability combinations such as `web_access -> shell_exec`, and track temporary approved exceptions with expiry dates.
@@ -123,7 +123,7 @@ node ./src/cli.mjs approve capability shell_exec \
   --approved-by noor \
   --expires 2026-12-31
 node ./src/cli.mjs list-approvals
-node ./src/cli.mjs suggest-approvals . --policy .agentsec/policy.json
+node ./src/cli.mjs suggest-approvals . --policy .loam/policy.json
 ```
 
 ## Current Scope
@@ -156,18 +156,18 @@ Discovery only checks whether known config paths exist. It does not read or uplo
 To scan existing discovered config locations in one combined report:
 
 ```bash
-node ./src/cli.mjs scan-known . --markdown agentsec-report.md --research agentsec-research.json
+node ./src/cli.mjs scan-known . --markdown loam-report.md --research loam-research.json
 ```
 
 Add a human-readable redacted report for safe sharing:
 
 ```bash
 node ./src/cli.mjs scan-known . \
-  --markdown agentsec-report.md \
+  --markdown loam-report.md \
   --redacted-markdown public-report.md \
-  --abom agentsec-abom.json \
-  --redacted-abom agentsec-redacted-abom.json \
-  --research agentsec-research.json
+  --abom loam-abom.json \
+  --redacted-abom loam-redacted-abom.json \
+  --research loam-research.json
 ```
 
 ## Demo Fixtures
@@ -185,7 +185,7 @@ The `fixtures/` directory contains intentionally vulnerable agent setups:
 
 ## Outputs
 
-`agentsec` can emit:
+`loam` can emit:
 
 - terminal report
 - JSON report

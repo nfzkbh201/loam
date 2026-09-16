@@ -19,9 +19,9 @@ It does not upload data.
 
 The private scan script writes two files:
 
-- `agentsec-report.md`: readable private report for the owner
-- `agentsec-redacted-report.md`: human-readable redacted report for sharing
-- `agentsec-research.json`: redacted aggregate export for research, only shared with permission
+- `loam-report.md`: readable private report for the owner
+- `loam-redacted-report.md`: human-readable redacted report for sharing
+- `loam-research.json`: redacted aggregate export for research, only shared with permission
 
 The redacted export removes:
 

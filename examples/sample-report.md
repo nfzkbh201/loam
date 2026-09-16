@@ -1,4 +1,4 @@
-# AgentSec Risk Report
+# Loam Risk Report
 
 **Target:** `fixtures/browser-shell-risk`
 **Risk score:** 45/100

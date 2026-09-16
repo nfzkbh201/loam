@@ -23,15 +23,15 @@ jobs:
       - name: Smoke test CLI
         run: |
           node ./src/cli.mjs discover .
-          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --json > /tmp/agentsec-scan.json
-          node ./src/cli.mjs scan ./fixtures/safe-agent --abom /tmp/agentsec-baseline-abom.json
-          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown /tmp/agentsec-report.md --abom /tmp/agentsec-current-abom.json --research /tmp/agentsec-research.json
-          node ./src/cli.mjs diff --baseline /tmp/agentsec-baseline-abom.json --current /tmp/agentsec-current-abom.json --markdown /tmp/agentsec-diff.md
-          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --policy examples/policy.json --markdown /tmp/agentsec-policy-report.md || test "$?" -eq 1
-          node ./src/cli.mjs init-policy --policy /tmp/agentsec-policy.json
-          node ./src/cli.mjs approve capability shell_exec --policy /tmp/agentsec-policy.json --reason "CI fixture" --approved-by ci --expires 2099-12-31
-          node ./src/cli.mjs list-approvals --policy /tmp/agentsec-policy.json --json > /tmp/agentsec-approvals.json
-          node ./src/cli.mjs suggest-approvals ./fixtures/browser-shell-risk --policy examples/policy.json > /tmp/agentsec-approval-suggestions.txt
+          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --json > /tmp/loam-scan.json
+          node ./src/cli.mjs scan ./fixtures/safe-agent --abom /tmp/loam-baseline-abom.json
+          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown /tmp/loam-report.md --abom /tmp/loam-current-abom.json --research /tmp/loam-research.json
+          node ./src/cli.mjs diff --baseline /tmp/loam-baseline-abom.json --current /tmp/loam-current-abom.json --markdown /tmp/loam-diff.md
+          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --policy examples/policy.json --markdown /tmp/loam-policy-report.md || test "$?" -eq 1
+          node ./src/cli.mjs init-policy --policy /tmp/loam-policy.json
+          node ./src/cli.mjs approve capability shell_exec --policy /tmp/loam-policy.json --reason "CI fixture" --approved-by ci --expires 2099-12-31
+          node ./src/cli.mjs list-approvals --policy /tmp/loam-policy.json --json > /tmp/loam-approvals.json
+          node ./src/cli.mjs suggest-approvals ./fixtures/browser-shell-risk --policy examples/policy.json > /tmp/loam-approval-suggestions.txt
 
       - name: Verify package
         run: npm pack --dry-run

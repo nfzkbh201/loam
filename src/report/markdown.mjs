@@ -1,7 +1,7 @@
 export function buildMarkdownReport(result) {
   const lines = [];
 
-  lines.push("# AgentSec Risk Report");
+  lines.push("# Loam Risk Report");
   lines.push("");
   lines.push(`**Target:** \`${result.target}\``);
   lines.push(`**Risk score:** ${result.summary.risk_score}/100`);

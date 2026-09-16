@@ -3,7 +3,7 @@ import { buildRedactedFinding, redactTargetLabel } from "./research.mjs";
 export function buildRedactedMarkdownReport(result) {
   const lines = [];
 
-  lines.push("# AgentSec Redacted Risk Report");
+  lines.push("# Loam Redacted Risk Report");
   lines.push("");
   lines.push("This report is redacted for sharing. It removes exact paths, config filenames, server names, package names, command args, and env key names.");
   lines.push("");

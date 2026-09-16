@@ -1,4 +1,4 @@
-name: agentsec
+name: loam
 description: Scan AI agent and MCP toolchains for risky dependency paths.
 
 inputs:
@@ -15,7 +15,7 @@ inputs:
     required: false
     default: "false"
   comment:
-    description: Create or update an AgentSec comment on pull requests.
+    description: Create or update a Loam comment on pull requests.
     required: false
     default: "true"
   diff:
@@ -25,11 +25,11 @@ inputs:
   baseline-path:
     description: Baseline ABOM path used for PR diffs.
     required: false
-    default: ".agentsec/baseline-abom.json"
+    default: ".loam/baseline-abom.json"
   policy-path:
     description: JSON policy path used for scan enforcement when the file exists.
     required: false
-    default: ".agentsec/policy.json"
+    default: ".loam/policy.json"
   github-token:
     description: GitHub token used to create or update pull request comments.
     required: false
@@ -38,15 +38,15 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Run agentsec
+    - name: Run loam
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
-        REPORT_PATH="$RUNNER_TEMP/agentsec-report.md"
-        ABOM_PATH="$RUNNER_TEMP/agentsec-abom.json"
-        DIFF_REPORT_PATH="$RUNNER_TEMP/agentsec-diff.md"
-        COMMENT_PATH="$RUNNER_TEMP/agentsec-comment.md"
+        REPORT_PATH="$RUNNER_TEMP/loam-report.md"
+        ABOM_PATH="$RUNNER_TEMP/loam-abom.json"
+        DIFF_REPORT_PATH="$RUNNER_TEMP/loam-diff.md"
+        COMMENT_PATH="$RUNNER_TEMP/loam-comment.md"
         ARGS=("scan" "${{ inputs.path }}" "--markdown" "$REPORT_PATH" "--abom" "$ABOM_PATH")
 
         if [ "${{ inputs.json }}" = "true" ]; then
@@ -91,11 +91,11 @@ runs:
         elif [ "${{ inputs.diff }}" = "true" ]; then
           {
             printf "\n---\n\n"
-            printf "# AgentSec ABOM Diff\n\n"
+            printf "# Loam ABOM Diff\n\n"
             printf "No baseline ABOM found at \`%s\`. Generate one with:\n\n" "${{ inputs.baseline-path }}"
             printf "\`\`\`bash\n"
-            printf "mkdir -p .agentsec\n"
-            printf "node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json\n"
+            printf "mkdir -p .loam\n"
+            printf "node ./src/cli.mjs scan . --abom .loam/baseline-abom.json\n"
             printf "\`\`\`\n"
           } >> "$COMMENT_PATH"
         fi

@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { validatePolicy } from "./policy.mjs";
 
-export const DEFAULT_POLICY_PATH = ".agentsec/policy.json";
+export const DEFAULT_POLICY_PATH = ".loam/policy.json";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EXAMPLE_POLICY_PATH = path.resolve(__dirname, "..", "examples", "policy.json");

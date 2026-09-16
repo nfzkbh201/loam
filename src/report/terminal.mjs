@@ -16,7 +16,7 @@ const SEVERITY_COLOR = {
 };
 
 export function printTerminalReport(result) {
-  console.log(`${bold("agentsec scan report")}`);
+  console.log(`${bold("loam scan report")}`);
   console.log(`${dim("Target:")} ${result.target}`);
   console.log(`${dim("Risk score:")} ${result.summary.risk_score}/100`);
   console.log(

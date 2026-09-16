@@ -66,7 +66,7 @@ export function diffAboms({ baseline, current }) {
   ].sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] || a.title.localeCompare(b.title));
 
   return {
-    tool: "agentsec",
+    tool: "loam",
     version: current.version || baseline.version || "0.1.0",
     compared_at: new Date().toISOString(),
     baseline: describeExport(baseline),

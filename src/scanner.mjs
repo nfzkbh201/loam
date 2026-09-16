@@ -43,7 +43,7 @@ export function scanTargets(targets) {
   const capabilities = Array.from(new Set(results.flatMap((result) => result.abom.capabilities))).sort();
 
   return {
-    tool: "agentsec",
+    tool: "loam",
     version: "0.1.0",
     scanned_at: new Date().toISOString(),
     target: "known agent config locations",
@@ -67,7 +67,7 @@ export function scanTargets(targets) {
 
 function buildScanResult({ target, context, findings, summary }) {
   return {
-    tool: "agentsec",
+    tool: "loam",
     version: "0.1.0",
     scanned_at: new Date().toISOString(),
     target,

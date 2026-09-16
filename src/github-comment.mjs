@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import https from "node:https";
 
-const marker = "<!-- agentsec-risk-report -->";
+const marker = "<!-- loam-risk-report -->";
 
 async function main() {
   const [reportPath] = process.argv.slice(2);
@@ -44,7 +44,7 @@ async function main() {
       token,
       body: { body }
     });
-    console.log(`Updated AgentSec PR comment #${existing.id}.`);
+    console.log(`Updated Loam PR comment #${existing.id}.`);
     return;
   }
 
@@ -54,7 +54,7 @@ async function main() {
     token,
     body: { body }
   });
-  console.log(`Created AgentSec PR comment #${created.id}.`);
+  console.log(`Created Loam PR comment #${created.id}.`);
 }
 
 function githubRequest({ method, path, token, body }) {
@@ -69,7 +69,7 @@ function githubRequest({ method, path, token, body }) {
         headers: {
           Accept: "application/vnd.github+json",
           Authorization: `Bearer ${token}`,
-          "User-Agent": "agentsec-action",
+          "User-Agent": "loam-action",
           "X-GitHub-Api-Version": "2022-11-28",
           ...(payload ? { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) } : {})
         }

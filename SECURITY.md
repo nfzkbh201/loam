@@ -1,6 +1,6 @@
 # Security Policy
 
-`agentsec` is an early defensive scanner for AI agent and MCP toolchains.
+`loam` is an early defensive scanner for AI agent and MCP toolchains.
 
 ## Responsible Use
 

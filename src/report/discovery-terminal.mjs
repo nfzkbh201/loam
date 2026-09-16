@@ -1,5 +1,5 @@
 export function printDiscoveryReport(results) {
-  console.log("agentsec discovery report");
+  console.log("loam discovery report");
   console.log("");
 
   const existing = results.filter((result) => result.exists);
@@ -10,6 +10,6 @@ export function printDiscoveryReport(results) {
     const mark = result.exists ? "FOUND" : "missing";
     console.log(`${mark} ${result.label}`);
     console.log(`  path: ${result.path}`);
-    console.log(`  scan: agentsec scan "${result.scan_hint}"`);
+    console.log(`  scan: loam scan "${result.scan_hint}"`);
   }
 }

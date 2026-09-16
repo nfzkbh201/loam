@@ -120,13 +120,13 @@ try {
   const displayResult = parsed.options.targetLabel ? { ...result, target: parsed.options.targetLabel } : result;
   const timestamp = new Date().toISOString().replaceAll(":", "-").replace(/\.\d{3}Z$/, "Z");
   const scanId = parsed.options.scanId || `scan-${timestamp.replaceAll("-", "").replace("T", "-").replace("Z", "")}`;
-  const outDir = path.resolve(parsed.options.outDir || path.join(process.cwd(), "agentsec-scan-output", timestamp));
+  const outDir = path.resolve(parsed.options.outDir || path.join(process.cwd(), "loam-scan-output", timestamp));
 
   fs.mkdirSync(outDir, { recursive: true });
 
-  const markdownPath = path.join(outDir, "agentsec-report.md");
-  const redactedMarkdownPath = path.join(outDir, "agentsec-redacted-report.md");
-  const researchPath = path.join(outDir, "agentsec-research.json");
+  const markdownPath = path.join(outDir, "loam-report.md");
+  const redactedMarkdownPath = path.join(outDir, "loam-redacted-report.md");
+  const researchPath = path.join(outDir, "loam-research.json");
 
   fs.writeFileSync(markdownPath, buildMarkdownReport(displayResult));
   fs.writeFileSync(redactedMarkdownPath, buildRedactedMarkdownReport(result));

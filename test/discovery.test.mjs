@@ -6,7 +6,7 @@ import test from "node:test";
 import { discoverTargets } from "../src/discovery.mjs";
 
 test("discovers project MCP configs by existence", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agentsec-discovery-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "loam-discovery-"));
   fs.writeFileSync(path.join(tmp, ".mcp.json"), "{}");
 
   const results = discoverTargets({
@@ -22,7 +22,7 @@ test("discovers project MCP configs by existence", () => {
 });
 
 test("discovers Claude Desktop config candidates without reading contents", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agentsec-discovery-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "loam-discovery-"));
   const home = path.join(tmp, "home");
   const claudeDir = path.join(home, "Library", "Application Support", "Claude");
   fs.mkdirSync(claudeDir, { recursive: true });

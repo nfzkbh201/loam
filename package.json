@@ -1,5 +1,5 @@
 {
-  "name": "agentsec",
+  "name": "loam",
   "version": "0.1.0",
   "description": "A local scanner for risky AI agent and MCP toolchains.",
   "type": "module",
@@ -23,7 +23,7 @@
     "abom"
   ],
   "bin": {
-    "agentsec": "./src/cli.mjs"
+    "loam": "./src/cli.mjs"
   },
   "files": [
     "action.yml",

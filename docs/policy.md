@@ -1,11 +1,11 @@
 # Policy
 
-AgentSec supports dependency-free JSON policies for local scans and GitHub Action enforcement.
+Loam supports dependency-free JSON policies for local scans and GitHub Action enforcement.
 
 Create a policy at:
 
 ```text
-.agentsec/policy.json
+.loam/policy.json
 ```
 
 Example:
@@ -32,7 +32,7 @@ Example:
 Run with policy:
 
 ```bash
-node ./src/cli.mjs scan . --policy .agentsec/policy.json
+node ./src/cli.mjs scan . --policy .loam/policy.json
 ```
 
 Create the default policy file:
@@ -51,8 +51,8 @@ Write a PR-ready report with policy violations:
 
 ```bash
 node ./src/cli.mjs scan . \
-  --markdown agentsec-report.md \
-  --policy .agentsec/policy.json \
+  --markdown loam-report.md \
+  --policy .loam/policy.json \
   --approval-suggestions
 ```
 
@@ -132,23 +132,23 @@ node ./src/cli.mjs list-approvals
 node ./src/cli.mjs list-approvals --json
 ```
 
-`approve` creates `.agentsec/policy.json` from the example policy if it does not exist. It avoids duplicate active approvals for the same type and subject. If an old approval has expired, adding a new approval for the same subject creates a fresh current approval.
+`approve` creates `.loam/policy.json` from the example policy if it does not exist. It avoids duplicate active approvals for the same type and subject. If an old approval has expired, adding a new approval for the same subject creates a fresh current approval.
 
 ## Approval Suggestions
 
 Generate approval commands from current policy violations:
 
 ```bash
-node ./src/cli.mjs suggest-approvals . --policy .agentsec/policy.json
+node ./src/cli.mjs suggest-approvals . --policy .loam/policy.json
 ```
 
 Add suggestions to scan output and Markdown reports:
 
 ```bash
 node ./src/cli.mjs scan . \
-  --policy .agentsec/policy.json \
+  --policy .loam/policy.json \
   --approval-suggestions \
-  --markdown agentsec-report.md
+  --markdown loam-report.md
 ```
 
 Suggestions are generated for approvable violations:
@@ -161,11 +161,11 @@ Hard-denied capabilities from `deny_capabilities` do not get approval suggestion
 
 ## GitHub Action
 
-The Action checks `.agentsec/policy.json` by default. Override the path with:
+The Action checks `.loam/policy.json` by default. Override the path with:
 
 ```yaml
 with:
-  policy-path: .agentsec/policy.json
+  policy-path: .loam/policy.json
 ```
 
-If the policy file exists, AgentSec applies it to the scan and includes violations in the job summary and PR comment.
+If the policy file exists, Loam applies it to the scan and includes violations in the job summary and PR comment.

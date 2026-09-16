@@ -6,8 +6,8 @@ import test from "node:test";
 import { addApproval, initPolicyFile, listApprovals } from "../src/policy-file.mjs";
 
 test("policy file commands initialize, approve, and list approvals", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agentsec-policy-"));
-  const policyPath = path.join(dir, ".agentsec", "policy.json");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "loam-policy-"));
+  const policyPath = path.join(dir, ".loam", "policy.json");
 
   const init = initPolicyFile({ policyPath });
   assert.equal(init.created, true);
@@ -47,8 +47,8 @@ test("policy file commands initialize, approve, and list approvals", () => {
 });
 
 test("policy file approvals normalize risk paths and separate expired entries", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agentsec-policy-"));
-  const policyPath = path.join(dir, ".agentsec", "policy.json");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "loam-policy-"));
+  const policyPath = path.join(dir, ".loam", "policy.json");
   initPolicyFile({ policyPath });
 
   addApproval({

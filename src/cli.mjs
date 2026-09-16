@@ -25,36 +25,36 @@ const SEVERITY_RANK = {
 };
 
 function usage() {
-  console.log(`agentsec
+  console.log(`loam
 
 Usage:
-  agentsec discover [path] [--json]
-  agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
-  agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
-  agentsec diff --baseline <file> --current <file> [--json] [--markdown <file>] [--fail-on <severity>]
-  agentsec init-policy [--policy <file>] [--force]
-  agentsec approve <capability|mcp_server|risk_path> <subject> --reason <text> --approved-by <name> --expires <date> [--policy <file>]
-  agentsec list-approvals [--policy <file>] [--json]
-  agentsec suggest-approvals <path> --policy <file> [--json] [--approved-by <name>] [--expires <date>]
+  loam discover [path] [--json]
+  loam scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
+  loam scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
+  loam diff --baseline <file> --current <file> [--json] [--markdown <file>] [--fail-on <severity>]
+  loam init-policy [--policy <file>] [--force]
+  loam approve <capability|mcp_server|risk_path> <subject> --reason <text> --approved-by <name> --expires <date> [--policy <file>]
+  loam list-approvals [--policy <file>] [--json]
+  loam suggest-approvals <path> --policy <file> [--json] [--approved-by <name>] [--expires <date>]
 
 Examples:
-  agentsec discover .
-  agentsec scan-known .
-  agentsec scan .
-  agentsec scan ./fixtures/browser-shell-risk --json
-  agentsec scan . --markdown agentsec-report.md
-  agentsec scan . --redacted-markdown public-report.md
-  agentsec scan . --abom agentsec-abom.json
-  agentsec scan . --redacted-abom agentsec-redacted-abom.json
-  agentsec scan . --sarif agentsec.sarif
-  agentsec scan . --research agentsec-research.json
-  agentsec scan . --policy .agentsec/policy.json
-  agentsec scan . --fail-on critical
-  agentsec diff --baseline main-abom.json --current agentsec-abom.json --fail-on high
-  agentsec init-policy
-  agentsec approve capability shell_exec --reason "Local dev agent only" --approved-by noor --expires 2026-12-31
-  agentsec list-approvals
-  agentsec suggest-approvals . --policy .agentsec/policy.json
+  loam discover .
+  loam scan-known .
+  loam scan .
+  loam scan ./fixtures/browser-shell-risk --json
+  loam scan . --markdown loam-report.md
+  loam scan . --redacted-markdown public-report.md
+  loam scan . --abom loam-abom.json
+  loam scan . --redacted-abom loam-redacted-abom.json
+  loam scan . --sarif loam.sarif
+  loam scan . --research loam-research.json
+  loam scan . --policy .loam/policy.json
+  loam scan . --fail-on critical
+  loam diff --baseline main-abom.json --current loam-abom.json --fail-on high
+  loam init-policy
+  loam approve capability shell_exec --reason "Local dev agent only" --approved-by noor --expires 2026-12-31
+  loam list-approvals
+  loam suggest-approvals . --policy .loam/policy.json
 `);
 }
 
@@ -765,7 +765,7 @@ try {
     process.exit(1);
   }
 } catch (error) {
-  console.error(`agentsec failed: ${error.message}`);
+  console.error(`loam failed: ${error.message}`);
   process.exit(1);
 }
 
