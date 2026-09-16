@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { diffAboms, shouldFailDiff } from "./diff.mjs";
 import { discoverTargets } from "./discovery.mjs";
+import { evaluatePolicy, shouldFailPolicy, validatePolicy } from "./policy.mjs";
 import { scanTarget, scanTargets } from "./scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "./report/abom.mjs";
 import { buildMarkdownReport } from "./report/markdown.mjs";
@@ -26,8 +27,8 @@ function usage() {
 
 Usage:
   agentsec discover [path] [--json]
-  agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--fail-on <severity>]
-  agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
+  agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--fail-on <severity>]
+  agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--fail-on <severity>]
   agentsec diff --baseline <file> --current <file> [--json] [--markdown <file>] [--fail-on <severity>]
 
 Examples:
@@ -41,6 +42,7 @@ Examples:
   agentsec scan . --redacted-abom agentsec-redacted-abom.json
   agentsec scan . --sarif agentsec.sarif
   agentsec scan . --research agentsec-research.json
+  agentsec scan . --policy .agentsec/policy.json
   agentsec scan . --fail-on critical
   agentsec diff --baseline main-abom.json --current agentsec-abom.json --fail-on high
 `);
@@ -134,6 +136,7 @@ function parseArgs(argv) {
       abom: null,
       redactedAbom: null,
       research: null,
+      policy: null,
       failOn: null
     };
 
@@ -195,6 +198,16 @@ function parseArgs(argv) {
         continue;
       }
 
+      if (command === "scan-known" && arg === "--policy") {
+        const policyPath = args[i + 1];
+        if (!policyPath || policyPath.startsWith("-")) {
+          return { error: "--policy requires a JSON policy file path." };
+        }
+        options.policy = policyPath;
+        i += 1;
+        continue;
+      }
+
       if (command === "scan-known" && arg === "--fail-on") {
         const severity = args[i + 1];
         if (!SEVERITY_RANK[severity]) {
@@ -228,6 +241,7 @@ function parseArgs(argv) {
     redactedAbom: null,
     sarif: null,
     research: null,
+    policy: null,
     failOn: null
   };
 
@@ -295,6 +309,16 @@ function parseArgs(argv) {
         return { error: "--research requires an output file path." };
       }
       options.research = researchPath;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--policy") {
+      const policyPath = args[i + 1];
+      if (!policyPath || policyPath.startsWith("-")) {
+        return { error: "--policy requires a JSON policy file path." };
+      }
+      options.policy = policyPath;
       i += 1;
       continue;
     }
@@ -385,6 +409,12 @@ try {
     result = scanTarget(parsed.target);
   }
 
+  if (parsed.options.policy) {
+    const policy = readJsonFile(parsed.options.policy);
+    validatePolicy(policy);
+    result.policy = evaluatePolicy(result, policy);
+  }
+
   if (parsed.options.markdown) {
     const outputPath = path.resolve(parsed.options.markdown);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
@@ -429,10 +459,15 @@ try {
 
   if (parsed.options.failOn) {
     const threshold = SEVERITY_RANK[parsed.options.failOn];
-    const failed = result.findings.some((finding) => SEVERITY_RANK[finding.severity] >= threshold);
-    if (failed) {
+    const findingsFailed = result.findings.some((finding) => SEVERITY_RANK[finding.severity] >= threshold);
+    const policyFailed = result.policy ? shouldFailPolicy(result.policy, parsed.options.failOn) : false;
+    if (findingsFailed || policyFailed) {
       process.exit(1);
     }
+  }
+
+  if (result.policy?.fail_on && shouldFailPolicy(result.policy, result.policy.fail_on)) {
+    process.exit(1);
   }
 } catch (error) {
   console.error(`agentsec failed: ${error.message}`);

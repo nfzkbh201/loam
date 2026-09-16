@@ -3,9 +3,11 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { diffAboms, shouldFailDiff } from "../src/diff.mjs";
+import { evaluatePolicy, shouldFailPolicy, validatePolicy } from "../src/policy.mjs";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
 import { buildDiffMarkdownReport } from "../src/report/diff-markdown.mjs";
+import { buildMarkdownReport } from "../src/report/markdown.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
 import { buildRedactedMarkdownReport } from "../src/report/redacted-markdown.mjs";
 
@@ -179,4 +181,35 @@ test("ABOM diff markdown summarizes risk paths for PR comments", () => {
   assert.equal(markdown.includes("## New Risk Paths"), true);
   assert.equal(markdown.includes("web_access -> shell_exec"), true);
   assert.equal(markdown.includes("## New MCP Servers"), true);
+});
+
+test("policy flags denied and unapproved agent capabilities", () => {
+  const result = scanTarget(path.join(fixtures, "browser-shell-risk"));
+  const policy = {
+    name: "strict agent review",
+    fail_on: "high",
+    deny_capabilities: ["shell_exec"],
+    require_approval_for: ["web_access"],
+    allowed_mcp_servers: ["@modelcontextprotocol/server-browser"],
+    deny_risk_paths: ["web_access -> shell_exec"]
+  };
+
+  validatePolicy(policy);
+  result.policy = evaluatePolicy(result, policy);
+  const markdown = buildMarkdownReport(result);
+
+  assert.equal(result.policy.summary.by_severity.critical, 2);
+  assert.equal(result.policy.summary.by_severity.high, 1);
+  assert.equal(result.policy.summary.by_severity.medium, 1);
+  assert.equal(
+    result.policy.violations.some((violation) => violation.id === "policy-denied-capability-shell-exec"),
+    true
+  );
+  assert.equal(
+    result.policy.violations.some((violation) => violation.id === "policy-denied-risk-path-web-access-shell-exec"),
+    true
+  );
+  assert.equal(shouldFailPolicy(result.policy, "high"), true);
+  assert.equal(markdown.includes("## Policy"), true);
+  assert.equal(markdown.includes("Denied capability present: shell_exec"), true);
 });

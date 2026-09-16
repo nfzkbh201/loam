@@ -27,6 +27,7 @@ node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-markdown public-report.md
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --abom agentsec-abom.json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-abom agentsec-redacted-abom.json
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --policy examples/policy.json
 node ./src/cli.mjs diff --baseline main-abom.json --current agentsec-abom.json --markdown agentsec-diff.md --fail-on high
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif agentsec.sarif
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research agentsec-research.json
@@ -76,6 +77,7 @@ jobs:
           comment: true
           diff: true
           baseline-path: .agentsec/baseline-abom.json
+          policy-path: .agentsec/policy.json
           github-token: ${{ github.token }}
 ```
 
@@ -98,6 +100,18 @@ node ./src/cli.mjs diff \
 ```
 
 The diff highlights added capabilities, new MCP servers, new workflows, new env files, and newly introduced risk paths such as web access reaching shell execution.
+
+## Policy
+
+Add a JSON policy to encode local rules:
+
+```bash
+mkdir -p .agentsec
+cp examples/policy.json .agentsec/policy.json
+node ./src/cli.mjs scan . --policy .agentsec/policy.json
+```
+
+Policies can deny capabilities, require approval for sensitive capabilities, restrict MCP servers to an allowlist, and deny capability combinations such as `web_access -> shell_exec`.
 
 ## Current Scope
 
@@ -167,6 +181,7 @@ The `fixtures/` directory contains intentionally vulnerable agent setups:
 - full ABOM JSON for private/internal use
 - redacted ABOM JSON for sharing anonymized inventory
 - ABOM diff report for comparing approved and current agent stacks
+- JSON policy enforcement for agent/toolchain rules
 - SARIF report for security tooling
 - redacted research export for aggregate studies
 
@@ -184,6 +199,8 @@ npm pack --dry-run
 This project is intended for defensive research into agentic supply-chain security. Only scan systems you own or have explicit permission to assess. When publishing findings, anonymize real organizations and never disclose secrets or private configs.
 
 See [docs/private-scans.md](docs/private-scans.md) for a design-partner scan workflow.
+
+See [docs/policy.md](docs/policy.md) for policy configuration.
 
 See [DESIGN_PARTNER.md](DESIGN_PARTNER.md) for the full run kit and outreach copy.
 

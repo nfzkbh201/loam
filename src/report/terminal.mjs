@@ -41,6 +41,22 @@ export function printTerminalReport(result) {
   console.log(`Capabilities: ${result.abom.capabilities.length ? result.abom.capabilities.join(", ") : "none detected"}`);
   console.log(`Env files: ${result.abom.env_files.length || 0}`);
 
+  if (result.policy) {
+    console.log("");
+    console.log(bold("Policy"));
+    console.log(
+      `Violations: ${result.policy.summary.total_violations} ` +
+        `(critical ${result.policy.summary.by_severity.critical}, high ${result.policy.summary.by_severity.high}, ` +
+        `medium ${result.policy.summary.by_severity.medium}, low ${result.policy.summary.by_severity.low})`
+    );
+
+    if (result.policy.violations.length > 0) {
+      for (const violation of result.policy.violations) {
+        console.log(`- ${severity(violation.severity)} ${violation.title}`);
+      }
+    }
+  }
+
   if (result.findings.length === 0) {
     console.log("");
     console.log(`${COLORS.green}No findings detected.${COLORS.reset}`);

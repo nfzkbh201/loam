@@ -26,6 +26,10 @@ inputs:
     description: Baseline ABOM path used for PR diffs.
     required: false
     default: ".agentsec/baseline-abom.json"
+  policy-path:
+    description: JSON policy path used for scan enforcement when the file exists.
+    required: false
+    default: ".agentsec/policy.json"
   github-token:
     description: GitHub token used to create or update pull request comments.
     required: false
@@ -51,6 +55,10 @@ runs:
 
         if [ "${{ inputs.fail-on }}" != "none" ]; then
           ARGS+=("--fail-on" "${{ inputs.fail-on }}")
+        fi
+
+        if [ -f "${{ inputs.policy-path }}" ]; then
+          ARGS+=("--policy" "${{ inputs.policy-path }}")
         fi
 
         set +e

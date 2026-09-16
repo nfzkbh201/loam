@@ -66,6 +66,31 @@ export function buildMarkdownReport(result) {
     lines.push("");
   }
 
+  if (result.policy) {
+    lines.push("## Policy");
+    lines.push("");
+    lines.push(
+      `Violations: ${result.policy.summary.total_violations} ` +
+        `(critical ${result.policy.summary.by_severity.critical}, high ${result.policy.summary.by_severity.high}, ` +
+        `medium ${result.policy.summary.by_severity.medium}, low ${result.policy.summary.by_severity.low})`
+    );
+    lines.push("");
+
+    if (result.policy.violations.length > 0) {
+      lines.push("| Severity | Violation | Subject | Recommended fix |");
+      lines.push("| --- | --- | --- | --- |");
+
+      for (const violation of result.policy.violations) {
+        lines.push(
+          `| ${escapeCell(violation.severity)} | ${escapeCell(violation.title)} | ` +
+            `${escapeCell(violation.subject)} | ${escapeCell(violation.fix)} |`
+        );
+      }
+
+      lines.push("");
+    }
+  }
+
   if (result.findings.length === 0) {
     lines.push("## Findings");
     lines.push("");
