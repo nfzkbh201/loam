@@ -18,6 +18,14 @@ inputs:
     description: Create or update an AgentSec comment on pull requests.
     required: false
     default: "true"
+  diff:
+    description: Compare the current ABOM against the baseline ABOM when the baseline file exists.
+    required: false
+    default: "true"
+  baseline-path:
+    description: Baseline ABOM path used for PR diffs.
+    required: false
+    default: ".agentsec/baseline-abom.json"
   github-token:
     description: GitHub token used to create or update pull request comments.
     required: false
@@ -32,7 +40,10 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         REPORT_PATH="$RUNNER_TEMP/agentsec-report.md"
-        ARGS=("scan" "${{ inputs.path }}" "--markdown" "$REPORT_PATH")
+        ABOM_PATH="$RUNNER_TEMP/agentsec-abom.json"
+        DIFF_REPORT_PATH="$RUNNER_TEMP/agentsec-diff.md"
+        COMMENT_PATH="$RUNNER_TEMP/agentsec-comment.md"
+        ARGS=("scan" "${{ inputs.path }}" "--markdown" "$REPORT_PATH" "--abom" "$ABOM_PATH")
 
         if [ "${{ inputs.json }}" = "true" ]; then
           ARGS+=("--json")
@@ -47,12 +58,49 @@ runs:
         SCAN_STATUS=$?
         set -e
 
+        cp "$REPORT_PATH" "$COMMENT_PATH"
+
+        DIFF_STATUS=0
+        if [ "${{ inputs.diff }}" = "true" ] && [ -f "${{ inputs.baseline-path }}" ]; then
+          DIFF_ARGS=("diff" "--baseline" "${{ inputs.baseline-path }}" "--current" "$ABOM_PATH" "--markdown" "$DIFF_REPORT_PATH")
+
+          if [ "${{ inputs.json }}" = "true" ]; then
+            DIFF_ARGS+=("--json")
+          fi
+
+          if [ "${{ inputs.fail-on }}" != "none" ]; then
+            DIFF_ARGS+=("--fail-on" "${{ inputs.fail-on }}")
+          fi
+
+          set +e
+          node "$GITHUB_ACTION_PATH/src/cli.mjs" "${DIFF_ARGS[@]}"
+          DIFF_STATUS=$?
+          set -e
+
+          printf "\n---\n\n" >> "$COMMENT_PATH"
+          cat "$DIFF_REPORT_PATH" >> "$COMMENT_PATH"
+        elif [ "${{ inputs.diff }}" = "true" ]; then
+          {
+            printf "\n---\n\n"
+            printf "# AgentSec ABOM Diff\n\n"
+            printf "No baseline ABOM found at \`%s\`. Generate one with:\n\n" "${{ inputs.baseline-path }}"
+            printf "\`\`\`bash\n"
+            printf "mkdir -p .agentsec\n"
+            printf "node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json\n"
+            printf "\`\`\`\n"
+          } >> "$COMMENT_PATH"
+        fi
+
         if [ -n "$GITHUB_STEP_SUMMARY" ]; then
-          cat "$REPORT_PATH" >> "$GITHUB_STEP_SUMMARY"
+          cat "$COMMENT_PATH" >> "$GITHUB_STEP_SUMMARY"
         fi
 
         if [ "${{ inputs.comment }}" = "true" ]; then
-          node "$GITHUB_ACTION_PATH/src/github-comment.mjs" "$REPORT_PATH"
+          node "$GITHUB_ACTION_PATH/src/github-comment.mjs" "$COMMENT_PATH"
         fi
 
-        exit "$SCAN_STATUS"
+        if [ "$SCAN_STATUS" -ne 0 ]; then
+          exit "$SCAN_STATUS"
+        fi
+
+        exit "$DIFF_STATUS"

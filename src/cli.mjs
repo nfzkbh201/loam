@@ -9,6 +9,7 @@ import { buildMarkdownReport } from "./report/markdown.mjs";
 import { buildRedactedMarkdownReport } from "./report/redacted-markdown.mjs";
 import { buildResearchExport } from "./report/research.mjs";
 import { buildSarifReport } from "./report/sarif.mjs";
+import { buildDiffMarkdownReport } from "./report/diff-markdown.mjs";
 import { printDiffReport } from "./report/diff-terminal.mjs";
 import { printDiscoveryReport } from "./report/discovery-terminal.mjs";
 import { printTerminalReport } from "./report/terminal.mjs";
@@ -27,7 +28,7 @@ Usage:
   agentsec discover [path] [--json]
   agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--fail-on <severity>]
   agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
-  agentsec diff --baseline <file> --current <file> [--json] [--fail-on <severity>]
+  agentsec diff --baseline <file> --current <file> [--json] [--markdown <file>] [--fail-on <severity>]
 
 Examples:
   agentsec discover .
@@ -58,6 +59,7 @@ function parseArgs(argv) {
       baseline: null,
       current: null,
       json: false,
+      markdown: null,
       failOn: null
     };
 
@@ -86,6 +88,16 @@ function parseArgs(argv) {
 
       if (arg === "--json") {
         options.json = true;
+        continue;
+      }
+
+      if (arg === "--markdown") {
+        const markdownPath = args[i + 1];
+        if (!markdownPath || markdownPath.startsWith("-")) {
+          return { error: "--markdown requires an output file path." };
+        }
+        options.markdown = markdownPath;
+        i += 1;
         continue;
       }
 
@@ -322,6 +334,12 @@ try {
       baseline: readJsonFile(parsed.options.baseline),
       current: readJsonFile(parsed.options.current)
     });
+
+    if (parsed.options.markdown) {
+      const outputPath = path.resolve(parsed.options.markdown);
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, buildDiffMarkdownReport(diff));
+    }
 
     if (parsed.options.json) {
       console.log(JSON.stringify(diff, null, 2));

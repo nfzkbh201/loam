@@ -27,7 +27,7 @@ node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-markdown public-report.md
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --abom agentsec-abom.json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-abom agentsec-redacted-abom.json
-node ./src/cli.mjs diff --baseline main-abom.json --current agentsec-abom.json --fail-on high
+node ./src/cli.mjs diff --baseline main-abom.json --current agentsec-abom.json --markdown agentsec-diff.md --fail-on high
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif agentsec.sarif
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research agentsec-research.json
 node ./src/cli.mjs scan ./fixtures/repo-write-deploy-risk --fail-on critical
@@ -74,20 +74,26 @@ jobs:
           path: .
           fail-on: critical
           comment: true
+          diff: true
+          baseline-path: .agentsec/baseline-abom.json
           github-token: ${{ github.token }}
 ```
 
-The action writes the report to the GitHub job summary and, on pull requests, creates or updates a single AgentSec comment.
+The action writes the report to the GitHub job summary and, on pull requests, creates or updates a single AgentSec comment. If `.agentsec/baseline-abom.json` exists, the comment also includes an ABOM diff against that approved baseline.
 
 ## ABOM Diff
 
 Use ABOM diff to compare an approved baseline against a new scan:
 
 ```bash
+mkdir -p .agentsec
+node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json
+
 node ./src/cli.mjs scan . --abom agentsec-abom.json
 node ./src/cli.mjs diff \
-  --baseline main-abom.json \
+  --baseline .agentsec/baseline-abom.json \
   --current agentsec-abom.json \
+  --markdown agentsec-diff.md \
   --fail-on high
 ```
 

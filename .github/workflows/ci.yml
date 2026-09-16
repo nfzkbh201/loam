@@ -24,7 +24,9 @@ jobs:
         run: |
           node ./src/cli.mjs discover .
           node ./src/cli.mjs scan ./fixtures/browser-shell-risk --json > /tmp/agentsec-scan.json
-          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown /tmp/agentsec-report.md --research /tmp/agentsec-research.json
+          node ./src/cli.mjs scan ./fixtures/safe-agent --abom /tmp/agentsec-baseline-abom.json
+          node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown /tmp/agentsec-report.md --abom /tmp/agentsec-current-abom.json --research /tmp/agentsec-research.json
+          node ./src/cli.mjs diff --baseline /tmp/agentsec-baseline-abom.json --current /tmp/agentsec-current-abom.json --markdown /tmp/agentsec-diff.md
 
       - name: Verify package
         run: npm pack --dry-run

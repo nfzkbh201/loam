@@ -71,8 +71,12 @@ The redacted ABOM preserves aggregate counts, capability labels, target type lab
 Compare an approved ABOM baseline against a new scan:
 
 ```bash
+mkdir -p .agentsec
+node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json
+
+node ./src/cli.mjs scan . --abom agentsec-abom.json
 node ./src/cli.mjs diff \
-  --baseline main-abom.json \
+  --baseline .agentsec/baseline-abom.json \
   --current agentsec-abom.json
 ```
 
@@ -80,8 +84,9 @@ Use `--fail-on` to turn the diff into a CI gate:
 
 ```bash
 node ./src/cli.mjs diff \
-  --baseline main-abom.json \
+  --baseline .agentsec/baseline-abom.json \
   --current agentsec-abom.json \
+  --markdown agentsec-diff.md \
   --fail-on high
 ```
 
@@ -94,3 +99,20 @@ The diff reports:
 - newly introduced risk paths, such as `web_access -> shell_exec`
 
 Use full ABOMs for precise diffs. Redacted ABOMs are better for sharing aggregate inventory and research findings.
+
+## GitHub PR Baseline
+
+The GitHub Action looks for this baseline by default:
+
+```text
+.agentsec/baseline-abom.json
+```
+
+Create or refresh it when the current agent/toolchain state has been reviewed and approved:
+
+```bash
+mkdir -p .agentsec
+node ./src/cli.mjs scan . --abom .agentsec/baseline-abom.json
+```
+
+On pull requests, the Action generates a current ABOM, compares it with the baseline, writes the diff to the job summary, and updates the AgentSec PR comment.

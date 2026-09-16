@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { diffAboms, shouldFailDiff } from "../src/diff.mjs";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
+import { buildDiffMarkdownReport } from "../src/report/diff-markdown.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
 import { buildRedactedMarkdownReport } from "../src/report/redacted-markdown.mjs";
 
@@ -167,4 +168,15 @@ test("ABOM diff flags newly introduced critical risk paths", () => {
     true
   );
   assert.equal(shouldFailDiff(diff, "critical"), true);
+});
+
+test("ABOM diff markdown summarizes risk paths for PR comments", () => {
+  const baseline = buildAbomExport(scanTarget(path.join(fixtures, "safe-agent")));
+  const current = buildAbomExport(scanTarget(path.join(fixtures, "browser-shell-risk")));
+  const markdown = buildDiffMarkdownReport(diffAboms({ baseline, current }));
+
+  assert.equal(markdown.includes("# AgentSec ABOM Diff"), true);
+  assert.equal(markdown.includes("## New Risk Paths"), true);
+  assert.equal(markdown.includes("web_access -> shell_exec"), true);
+  assert.equal(markdown.includes("## New MCP Servers"), true);
 });
