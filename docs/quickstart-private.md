@@ -30,6 +30,8 @@ Discovery only checks whether known config paths exist. It does not read file co
 node ./src/cli.mjs scan-known . \
   --markdown agentsec-report.md \
   --redacted-markdown agentsec-redacted-report.md \
+  --abom agentsec-abom.json \
+  --redacted-abom agentsec-redacted-abom.json \
   --research agentsec-research.json
 ```
 
@@ -37,6 +39,8 @@ This scans discovered config locations and writes:
 
 - `agentsec-report.md`: private Markdown report
 - `agentsec-redacted-report.md`: redacted Markdown report for sharing
+- `agentsec-abom.json`: private Agent Bill of Materials
+- `agentsec-redacted-abom.json`: redacted Agent Bill of Materials
 - `agentsec-research.json`: redacted aggregate export, only share with permission
 
 ## Run A Specific Project Scan

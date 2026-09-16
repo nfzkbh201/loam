@@ -3,6 +3,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
+import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
 import { buildRedactedMarkdownReport } from "../src/report/redacted-markdown.mjs";
 
@@ -126,4 +127,26 @@ test("redacted markdown hides server names, package names, and config filenames"
   assert.equal(markdown.includes("shell ("), false);
   assert.equal(markdown.includes("Cursor config"), true);
   assert.equal(markdown.includes("web_access"), true);
+});
+
+test("ABOM exports full and redacted inventories", () => {
+  const result = scanTargets([
+    {
+      label: "Cursor MCP config",
+      path: path.join(fixtures, "browser-shell-risk")
+    }
+  ]);
+
+  const full = buildAbomExport(result);
+  const redacted = buildRedactedAbomExport(result);
+  const redactedText = JSON.stringify(redacted);
+
+  assert.equal(full.redacted, false);
+  assert.equal(full.abom.mcp_servers.some((server) => server.package === "@modelcontextprotocol/server-browser"), true);
+  assert.equal(redacted.redacted, true);
+  assert.equal(redacted.abom.mcp_server_count, 2);
+  assert.equal(redactedText.includes("@modelcontextprotocol/server-browser"), false);
+  assert.equal(redactedText.includes("mcp-shell"), false);
+  assert.equal(redactedText.includes(".mcp.json"), false);
+  assert.equal(redactedText.includes("Cursor config"), true);
 });

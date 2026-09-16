@@ -25,6 +25,8 @@ node ./src/cli.mjs scan ./fixtures/browser-shell-risk
 node ./src/cli.mjs scan ./fixtures/unknown-mcp-risk --json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report.md
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-markdown public-report.md
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --abom agentsec-abom.json
+node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-abom agentsec-redacted-abom.json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif agentsec.sarif
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research agentsec-research.json
 node ./src/cli.mjs scan ./fixtures/repo-write-deploy-risk --fail-on critical
@@ -115,6 +117,8 @@ Add a human-readable redacted report for safe sharing:
 node ./src/cli.mjs scan-known . \
   --markdown agentsec-report.md \
   --redacted-markdown public-report.md \
+  --abom agentsec-abom.json \
+  --redacted-abom agentsec-redacted-abom.json \
   --research agentsec-research.json
 ```
 
@@ -139,6 +143,8 @@ The `fixtures/` directory contains intentionally vulnerable agent setups:
 - JSON report
 - Markdown report for PR comments
 - redacted Markdown report for sharing anonymized findings
+- full ABOM JSON for private/internal use
+- redacted ABOM JSON for sharing anonymized inventory
 - SARIF report for security tooling
 - redacted research export for aggregate studies
 

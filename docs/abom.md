@@ -39,3 +39,29 @@ untrusted webpage
 → repository write access
 → deployment workflow
 ```
+
+## Export
+
+Private/internal ABOM:
+
+```bash
+node ./src/cli.mjs scan /path/to/project --abom agentsec-abom.json
+```
+
+Redacted/shareable ABOM:
+
+```bash
+node ./src/cli.mjs scan /path/to/project --redacted-abom agentsec-redacted-abom.json
+```
+
+Combined known-config ABOM:
+
+```bash
+node ./src/cli.mjs scan-known . \
+  --abom agentsec-abom.json \
+  --redacted-abom agentsec-redacted-abom.json
+```
+
+The full ABOM may include config filenames, server names, package names, commands, args, env key names, and path arguments. Treat it as private.
+
+The redacted ABOM preserves aggregate counts, capability labels, target type labels, and per-component capability sets, but removes exact paths, config filenames, server names, package names, command args, and env key names.
