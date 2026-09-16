@@ -1,0 +1,57 @@
+{
+  "schema": "loam.abom.v0",
+  "target": "cursor-claude-agent-workspace",
+  "generated_at": "2026-09-16T00:00:00Z",
+  "risk_score": 82,
+  "summary": {
+    "critical": 2,
+    "high": 3,
+    "medium": 0,
+    "low": 0
+  },
+  "capabilities": [
+    "web_access",
+    "agent_context",
+    "shell_exec",
+    "filesystem_access",
+    "secrets_access",
+    "repo_write",
+    "deployment_workflow"
+  ],
+  "mcp_servers": [
+    {
+      "name": "filesystem",
+      "capabilities": ["filesystem_read", "filesystem_write"],
+      "scope": "workspace"
+    },
+    {
+      "name": "browser",
+      "capabilities": ["web_fetch", "page_read"],
+      "scope": "network"
+    }
+  ],
+  "instruction_files": [
+    ".cursor/rules/agent.mdc",
+    "CLAUDE.md"
+  ],
+  "findings": [
+    {
+      "severity": "critical",
+      "title": "Untrusted web content can reach shell execution",
+      "path": ["web_access", "agent_context", "shell_exec"],
+      "fix": "Separate browser-facing agents from shell tools or require explicit approval."
+    },
+    {
+      "severity": "critical",
+      "title": "Secrets reachable from browser-facing agent context",
+      "path": ["web_access", "agent_context", "secrets_access"],
+      "fix": "Move secrets outside agent-readable paths and split credentialed workflows."
+    },
+    {
+      "severity": "high",
+      "title": "Repository writes sit near deployment workflow",
+      "path": ["repo_write", "deployment_workflow"],
+      "fix": "Require human review for agent-authored commits and separate deploy credentials."
+    }
+  ]
+}

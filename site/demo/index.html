@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loam Demo Report | Agent Authority Map</title>
+    <meta
+      name="description"
+      content="Explore a sample Loam report with clickable agent risk paths, an Agent Bill of Materials summary, and remediation guidance."
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./demo.css" />
+    <link rel="icon" type="image/svg+xml" href="../assets/loam-logo.svg" />
+  </head>
+  <body class="demo-page">
+    <header class="site-header" aria-label="Primary">
+      <a class="brand" href="../index.html#top" aria-label="Loam home">
+        <img src="../assets/loam-logo.svg" alt="" width="28" height="28" />
+        <span>Loam</span>
+      </a>
+      <nav>
+        <a href="../index.html#product">Product</a>
+        <a href="./index.html" aria-current="page">Demo</a>
+        <a href="../index.html#research">Research</a>
+      </nav>
+      <a class="nav-cta" href="../index.html#pilot">Private beta</a>
+    </header>
+
+    <main class="demo-shell">
+      <section class="demo-hero" aria-labelledby="demo-title">
+        <div>
+          <p class="eyebrow">Sample Loam report</p>
+          <h1 id="demo-title">Agent authority map for a coding-agent workspace.</h1>
+          <p>
+            This is what a first Loam scan should feel like: a clear risk score, the exact authority paths that matter,
+            and a concrete Agent Bill of Materials teams can review before agents touch production systems.
+          </p>
+        </div>
+        <div class="score-panel" aria-label="Scan score summary">
+          <span>Risk score</span>
+          <strong>82</strong>
+          <small>Critical review required</small>
+        </div>
+      </section>
+
+      <section class="scan-grid" aria-label="Interactive sample scan">
+        <aside class="scan-summary">
+          <div class="summary-card">
+            <span class="summary-label">Target</span>
+            <strong>Cursor + Claude Code agent workspace</strong>
+            <p>Local scan of project rules, MCP config, deployment instructions, and credential exposure signals.</p>
+          </div>
+
+          <div class="stat-grid" aria-label="Scan metrics">
+            <div>
+              <span>ABOM items</span>
+              <strong>17</strong>
+            </div>
+            <div>
+              <span>Critical</span>
+              <strong>2</strong>
+            </div>
+            <div>
+              <span>High</span>
+              <strong>3</strong>
+            </div>
+            <div>
+              <span>MCP servers</span>
+              <strong>2</strong>
+            </div>
+          </div>
+
+          <div class="downloads" aria-label="Sample report downloads">
+            <a class="button button-primary" href="./sample-abom.json" download>Download ABOM</a>
+            <a class="button button-secondary dark" href="./loam-report.md" download>Download report</a>
+          </div>
+        </aside>
+
+        <section class="findings-panel" aria-label="Findings">
+          <div class="panel-heading">
+            <span>Findings</span>
+            <strong>5 active paths</strong>
+          </div>
+          <button class="finding active" type="button" data-finding="web-shell">
+            <span class="severity critical">Critical</span>
+            <strong>Untrusted web content can reach shell execution</strong>
+            <small>web_access -> agent_context -> shell_exec</small>
+          </button>
+          <button class="finding" type="button" data-finding="web-secrets">
+            <span class="severity critical">Critical</span>
+            <strong>Secrets reachable from browser-facing agent context</strong>
+            <small>web_access -> agent_context -> secrets_access</small>
+          </button>
+          <button class="finding" type="button" data-finding="repo-deploy">
+            <span class="severity high">High</span>
+            <strong>Repository writes sit near deployment workflow</strong>
+            <small>repo_write -> deployment_workflow</small>
+          </button>
+          <button class="finding" type="button" data-finding="auto-approval">
+            <span class="severity high">High</span>
+            <strong>Agent instructions reduce approval around sensitive tools</strong>
+            <small>agent_instruction -> no_visible_approval -> sensitive_capability</small>
+          </button>
+          <button class="finding" type="button" data-finding="mcp-filesystem">
+            <span class="severity high">High</span>
+            <strong>MCP filesystem server exposes broad project access</strong>
+            <small>mcp_server -> filesystem_access -> repo_context</small>
+          </button>
+        </section>
+
+        <section class="detail-panel" aria-live="polite" aria-label="Finding details">
+          <div class="detail-top">
+            <span id="detailSeverity" class="severity critical">Critical</span>
+            <span id="detailPath">web_access -> agent_context -> shell_exec</span>
+          </div>
+          <h2 id="detailTitle">Untrusted web content can reach shell execution</h2>
+          <p id="detailWhy">
+            A browser or fetch tool can introduce prompt-injected content that influences an agent with shell execution.
+          </p>
+          <div class="path-map" aria-hidden="true">
+            <span id="pathStart">web</span>
+            <i></i>
+            <span id="pathMiddle">agent</span>
+            <i></i>
+            <span id="pathEnd">shell</span>
+          </div>
+          <div class="detail-block">
+            <h3>Evidence</h3>
+            <p id="detailEvidence">`.cursor/rules/agent.mdc` grants web, filesystem, secrets, and shell access in one runtime.</p>
+          </div>
+          <div class="detail-block">
+            <h3>Fix</h3>
+            <p id="detailFix">Separate browser-facing agents from shell-capable tools, or require explicit human approval before shell execution.</p>
+          </div>
+        </section>
+      </section>
+
+      <section class="abom-strip" aria-label="Agent Bill of Materials categories">
+        <div>
+          <span>Instructions</span>
+          <strong>4</strong>
+        </div>
+        <div>
+          <span>Tools</span>
+          <strong>9</strong>
+        </div>
+        <div>
+          <span>Secrets</span>
+          <strong>2</strong>
+        </div>
+        <div>
+          <span>Deploy paths</span>
+          <strong>2</strong>
+        </div>
+      </section>
+    </main>
+
+    <script src="./demo.js"></script>
+  </body>
+</html>
