@@ -59,6 +59,7 @@ runs:
 
         if [ -f "${{ inputs.policy-path }}" ]; then
           ARGS+=("--policy" "${{ inputs.policy-path }}")
+          ARGS+=("--approval-suggestions")
         fi
 
         set +e

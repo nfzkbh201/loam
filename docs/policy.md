@@ -52,7 +52,8 @@ Write a PR-ready report with policy violations:
 ```bash
 node ./src/cli.mjs scan . \
   --markdown agentsec-report.md \
-  --policy .agentsec/policy.json
+  --policy .agentsec/policy.json \
+  --approval-suggestions
 ```
 
 ## Fields
@@ -132,6 +133,31 @@ node ./src/cli.mjs list-approvals --json
 ```
 
 `approve` creates `.agentsec/policy.json` from the example policy if it does not exist. It avoids duplicate active approvals for the same type and subject. If an old approval has expired, adding a new approval for the same subject creates a fresh current approval.
+
+## Approval Suggestions
+
+Generate approval commands from current policy violations:
+
+```bash
+node ./src/cli.mjs suggest-approvals . --policy .agentsec/policy.json
+```
+
+Add suggestions to scan output and Markdown reports:
+
+```bash
+node ./src/cli.mjs scan . \
+  --policy .agentsec/policy.json \
+  --approval-suggestions \
+  --markdown agentsec-report.md
+```
+
+Suggestions are generated for approvable violations:
+
+- `unapproved_capability` -> `approve capability ...`
+- `unapproved_mcp_server` -> `approve mcp_server ...`
+- `denied_risk_path` -> `approve risk_path ...`
+
+Hard-denied capabilities from `deny_capabilities` do not get approval suggestions because approvals do not bypass hard denies.
 
 ## GitHub Action
 

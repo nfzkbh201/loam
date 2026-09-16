@@ -70,6 +70,15 @@ export function printTerminalReport(result) {
         console.log(`- ${approval.type}: ${approval.subject}${metadata ? ` (${metadata})` : ""}`);
       }
     }
+
+    if (result.policy.approval_suggestions?.length > 0) {
+      console.log("");
+      console.log(bold("Approval Suggestions"));
+      for (const suggestion of result.policy.approval_suggestions) {
+        console.log(`- ${suggestion.severity} ${suggestion.type}: ${suggestion.subject}`);
+        console.log(`  ${suggestion.command}`);
+      }
+    }
   }
 
   if (result.findings.length === 0) {

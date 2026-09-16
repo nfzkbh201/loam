@@ -106,6 +106,22 @@ export function buildMarkdownReport(result) {
 
       lines.push("");
     }
+
+    if (result.policy.approval_suggestions?.length > 0) {
+      lines.push("### Approval Suggestions");
+      lines.push("");
+      lines.push("Review before running these commands.");
+      lines.push("");
+
+      for (const suggestion of result.policy.approval_suggestions) {
+        lines.push(`**${suggestion.severity} ${suggestion.type}:** \`${suggestion.subject}\``);
+        lines.push("");
+        lines.push("```bash");
+        lines.push(suggestion.command);
+        lines.push("```");
+        lines.push("");
+      }
+    }
   }
 
   if (result.findings.length === 0) {

@@ -109,6 +109,7 @@ Add a JSON policy to encode local rules:
 mkdir -p .agentsec
 cp examples/policy.json .agentsec/policy.json
 node ./src/cli.mjs scan . --policy .agentsec/policy.json
+node ./src/cli.mjs scan . --policy .agentsec/policy.json --approval-suggestions
 ```
 
 Policies can deny capabilities, require approval for sensitive capabilities, restrict MCP servers to an allowlist, deny capability combinations such as `web_access -> shell_exec`, and track temporary approved exceptions with expiry dates.
@@ -122,6 +123,7 @@ node ./src/cli.mjs approve capability shell_exec \
   --approved-by noor \
   --expires 2026-12-31
 node ./src/cli.mjs list-approvals
+node ./src/cli.mjs suggest-approvals . --policy .agentsec/policy.json
 ```
 
 ## Current Scope

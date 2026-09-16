@@ -3,6 +3,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { diffAboms, shouldFailDiff } from "../src/diff.mjs";
+import { buildApprovalSuggestions } from "../src/policy-suggestions.mjs";
 import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "../src/policy.mjs";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
@@ -196,6 +197,10 @@ test("policy flags denied and unapproved agent capabilities", () => {
 
   validatePolicy(policy);
   result.policy = evaluatePolicy(result, policy);
+  result.policy.approval_suggestions = buildApprovalSuggestions(result.policy, {
+    policyPath: ".agentsec/policy.json",
+    expires: "2026-12-31"
+  });
   const markdown = buildMarkdownReport(result);
 
   assert.equal(result.policy.summary.by_severity.critical, 2);
@@ -210,8 +215,22 @@ test("policy flags denied and unapproved agent capabilities", () => {
     true
   );
   assert.equal(shouldFailPolicy(result.policy, "high"), true);
+  assert.equal(
+    result.policy.approval_suggestions.some((suggestion) => suggestion.type === "capability" && suggestion.subject === "web_access"),
+    true
+  );
+  assert.equal(
+    result.policy.approval_suggestions.some((suggestion) => suggestion.type === "capability" && suggestion.subject === "shell_exec"),
+    false
+  );
+  assert.equal(
+    result.policy.approval_suggestions.some((suggestion) => suggestion.type === "risk_path" && suggestion.subject === "web_access -> shell_exec"),
+    true
+  );
   assert.equal(markdown.includes("## Policy"), true);
   assert.equal(markdown.includes("Denied capability present: shell_exec"), true);
+  assert.equal(markdown.includes("### Approval Suggestions"), true);
+  assert.equal(markdown.includes("node ./src/cli.mjs approve risk_path"), true);
 });
 
 test("policy approvals allow reviewed exceptions and report metadata", () => {
