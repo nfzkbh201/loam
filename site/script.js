@@ -1,36 +1,13 @@
 const canvas = document.querySelector("#authority-map");
 const ctx = canvas.getContext("2d");
 
-const labels = [
-  "web",
-  "agent context",
-  "shell",
-  "repo write",
-  "deploy",
-  "secrets",
-  "MCP",
-  "approval",
-  "ABOM",
-];
-
-const nodes = labels.map((label, index) => ({
-  label,
-  angle: (Math.PI * 2 * index) / labels.length,
-  orbit: 0.22 + (index % 3) * 0.09,
-  speed: 0.00018 + (index % 4) * 0.000035,
-  tone: index % 3,
-}));
-
-const links = [
-  [0, 1],
-  [1, 2],
-  [3, 4],
-  [6, 5],
-  [1, 6],
-  [7, 4],
-  [8, 1],
-  [0, 6],
-  [2, 5],
+const targets = [
+  { label: "web", x: 0.2, y: 0.2, tone: "#d8a23a", weight: "high" },
+  { label: "MCP", x: 0.78, y: 0.18, tone: "#8bb7a1", weight: "medium" },
+  { label: "secrets", x: 0.88, y: 0.52, tone: "#9fb6e8", weight: "critical" },
+  { label: "shell", x: 0.68, y: 0.84, tone: "#d8a23a", weight: "critical" },
+  { label: "deploy", x: 0.18, y: 0.76, tone: "#9b4f32", weight: "high" },
+  { label: "repo write", x: 0.1, y: 0.48, tone: "#8bb7a1", weight: "medium" },
 ];
 
 let pointer = { x: 0, y: 0, active: false };
@@ -47,19 +24,18 @@ function resize() {
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
 
-function nodePosition(node, time) {
-  const centerX = width * 0.68;
-  const centerY = height * 0.48;
-  const radius = Math.min(width, height) * node.orbit;
-  const drift = Math.sin(time * node.speed * 1.7 + node.angle) * 22;
-  const x = centerX + Math.cos(node.angle + time * node.speed) * (radius + drift);
-  const y = centerY + Math.sin(node.angle + time * node.speed * 1.25) * (radius * 0.68 + drift);
-  return { x, y };
+function targetPosition(target, index, time) {
+  const driftX = Math.cos(time * 0.001 + index * 1.7) * 9;
+  const driftY = Math.sin(time * 0.0012 + index * 1.1) * 7;
+  return {
+    x: target.x * width + driftX,
+    y: target.y * height + driftY,
+  };
 }
 
 function drawGrain() {
-  ctx.globalAlpha = 0.08;
-  for (let i = 0; i < 140; i += 1) {
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 70; i += 1) {
     const x = Math.random() * width;
     const y = Math.random() * height;
     ctx.fillStyle = i % 2 ? "#fffdf5" : "#d8a23a";
@@ -71,61 +47,99 @@ function drawGrain() {
 function render(time) {
   ctx.clearRect(0, 0, width, height);
 
-  const grd = ctx.createLinearGradient(0, 0, width, height);
-  grd.addColorStop(0, "#11130f");
-  grd.addColorStop(0.48, "#17251f");
-  grd.addColorStop(1, "#143456");
-  ctx.fillStyle = grd;
+  const center = { x: width * 0.5, y: height * 0.5 };
+  const radius = Math.min(width, height) * 0.24;
+  const positions = targets.map((target, index) => targetPosition(target, index, time));
+
+  const glow = ctx.createRadialGradient(center.x, center.y, 8, center.x, center.y, width * 0.62);
+  glow.addColorStop(0, "rgba(216, 162, 58, 0.12)");
+  glow.addColorStop(0.45, "rgba(34, 73, 59, 0.1)");
+  glow.addColorStop(1, "rgba(255, 253, 245, 0)");
+  ctx.fillStyle = glow;
   ctx.fillRect(0, 0, width, height);
 
-  const terrain = ctx.createLinearGradient(0, height * 0.64, width, height);
-  terrain.addColorStop(0, "rgba(155, 79, 50, 0.56)");
-  terrain.addColorStop(0.55, "rgba(216, 162, 58, 0.34)");
-  terrain.addColorStop(1, "rgba(34, 73, 59, 0.42)");
-  ctx.fillStyle = terrain;
-  ctx.beginPath();
-  ctx.moveTo(0, height);
-  for (let x = 0; x <= width; x += 32) {
-    const y =
-      height * 0.76 +
-      Math.sin(x * 0.012 + time * 0.0007) * 22 +
-      Math.cos(x * 0.021) * 16;
-    ctx.lineTo(x, y);
-  }
-  ctx.lineTo(width, height);
-  ctx.closePath();
-  ctx.fill();
-
-  const positions = nodes.map((node) => nodePosition(node, time));
-
-  links.forEach(([from, to], index) => {
-    const a = positions[from];
-    const b = positions[to];
-    const pulse = 0.34 + Math.sin(time * 0.0016 + index) * 0.16;
-    ctx.strokeStyle = `rgba(255, 253, 245, ${pulse})`;
-    ctx.lineWidth = index % 3 === 0 ? 1.6 : 1;
+  for (let ring = 0; ring < 4; ring += 1) {
+    const offset = ring * 16;
+    ctx.strokeStyle = `rgba(255, 253, 245, ${0.12 - ring * 0.018})`;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
+    for (let i = 0; i <= 180; i += 1) {
+      const angle = (Math.PI * 2 * i) / 180;
+      const wave =
+        Math.sin(angle * 3 + time * 0.0011 + ring) * 10 +
+        Math.cos(angle * 5 - time * 0.0008) * 6;
+      const r = radius + offset + wave;
+      const x = center.x + Math.cos(angle) * r * 1.22;
+      const y = center.y + Math.sin(angle) * r * 0.72;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  const lineColors = ["#22493b", "#d8a23a", "#9b4f32"];
+  lineColors.forEach((color, index) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let i = 0; i <= 72; i += 1) {
+      const t = i / 72;
+      const x = center.x - radius * 1.15 + t * radius * 2.3;
+      const y =
+        center.y -
+        26 +
+        index * 25 +
+        Math.sin(t * Math.PI * 2 + time * 0.0013 + index) * 8;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
     ctx.stroke();
   });
 
   positions.forEach((pos, index) => {
-    const node = nodes[index];
-    const colors = ["#d8a23a", "#8bb7a1", "#9fb6e8"];
+    const pulse = 0.24 + Math.sin(time * 0.002 + index) * 0.1;
+    ctx.strokeStyle = `rgba(255, 253, 245, ${pulse})`;
+    ctx.lineWidth = targets[index].weight === "critical" ? 1.8 : 1.1;
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    ctx.lineTo(center.x, center.y);
+    ctx.stroke();
+  });
+
+  positions.forEach((pos, index) => {
+    const target = targets[index];
     const activeDistance = pointer.active
       ? Math.hypot(pointer.x - pos.x, pointer.y - pos.y)
       : 999;
-    const scale = activeDistance < 130 ? 1.3 : 1;
+    const scale = activeDistance < 120 ? 1.26 : 1;
+    const nodeRadius = target.weight === "critical" ? 7 : 5.6;
 
-    ctx.fillStyle = colors[node.tone];
+    ctx.fillStyle = target.tone;
     ctx.beginPath();
-    ctx.arc(pos.x, pos.y, 5.8 * scale, 0, Math.PI * 2);
+    ctx.arc(pos.x, pos.y, nodeRadius * scale, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.strokeStyle = target.weight === "critical"
+      ? "rgba(255, 151, 122, 0.72)"
+      : "rgba(255, 253, 245, 0.24)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, nodeRadius * 2.3 * scale, 0, Math.PI * 2);
+    ctx.stroke();
 
     ctx.fillStyle = "rgba(255, 253, 245, 0.74)";
     ctx.font = "600 13px Inter, system-ui, sans-serif";
-    ctx.fillText(node.label, pos.x + 14, pos.y + 5);
+    ctx.textAlign = pos.x > width * 0.72 ? "right" : "left";
+    ctx.fillText(target.label, pos.x > width * 0.72 ? pos.x - 14 : pos.x + 14, pos.y + 5);
+    ctx.textAlign = "left";
   });
 
   drawGrain();
