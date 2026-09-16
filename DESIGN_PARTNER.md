@@ -51,6 +51,15 @@ Use a label if the owner does not want absolute local paths in the Markdown repo
 node ./scripts/private-scan.mjs /path/to/project --out ./scan-output --target-label "agent-project"
 ```
 
+Append the scan to a research log:
+
+```bash
+node ./scripts/private-scan.mjs /path/to/project \
+  --target-label "founder-1" \
+  --scan-id "scan-001" \
+  --append-log ./research/scan-log.csv
+```
+
 ## Outreach Message
 
 ```text
@@ -75,7 +84,7 @@ Ask these after sending the report:
 
 ## Manual Research Log
 
-Use [research/scan-log-template.csv](research/scan-log-template.csv). The private scan script prints a suggested CSV row after each scan.
+Use [research/scan-log-template.csv](research/scan-log-template.csv). The private scan script prints a suggested CSV row after each scan and can append it automatically with `--append-log`.
 
 ```text
 scan_id:

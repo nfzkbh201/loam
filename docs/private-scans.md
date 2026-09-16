@@ -20,6 +20,17 @@ Share `agentsec-report.md` privately with the owner.
 
 The private scan wrapper also creates `agentsec-redacted-report.md`, which is intended for sharing anonymized findings after the owner approves.
 
+## Append To Research Log
+
+```bash
+node ./scripts/private-scan.mjs /path/to/project \
+  --target-label "founder-1" \
+  --scan-id "scan-001" \
+  --append-log ./research/scan-log.csv
+```
+
+If the CSV does not exist, the script creates it with the standard header.
+
 ## Redacted Research Export
 
 Only request this with permission.

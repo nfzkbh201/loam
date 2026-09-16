@@ -6,14 +6,35 @@ import { buildMarkdownReport } from "../src/report/markdown.mjs";
 import { buildRedactedMarkdownReport } from "../src/report/redacted-markdown.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
 
+const SCAN_LOG_HEADER = [
+  "scan_id",
+  "date",
+  "user_type",
+  "agent_framework",
+  "mcp_usage",
+  "critical_count",
+  "high_count",
+  "medium_count",
+  "low_count",
+  "risk_score",
+  "top_finding",
+  "surprise_factor",
+  "would_install_ci",
+  "would_pay",
+  "permission_redacted_export",
+  "permission_anonymous_quote",
+  "follow_up_requested",
+  "notes"
+].join(",");
+
 function usage() {
   console.log(`Private design-partner scan
 
 Usage:
-  node ./scripts/private-scan.mjs <path> [--out <dir>] [--target-label <label>]
+  node ./scripts/private-scan.mjs <path> [--out <dir>] [--target-label <label>] [--scan-id <id>] [--append-log <csv>]
 
 Example:
-  node ./scripts/private-scan.mjs /path/to/project --out ./scan-output --target-label "design-partner-project"
+  node ./scripts/private-scan.mjs /path/to/project --out ./scan-output --target-label "design-partner-project" --append-log ./research/scan-log.csv
 `);
 }
 
@@ -27,7 +48,9 @@ function parseArgs(argv) {
 
   const options = {
     outDir: null,
-    targetLabel: null
+    targetLabel: null,
+    scanId: null,
+    appendLog: null
   };
 
   for (let i = 0; i < args.length; i += 1) {
@@ -49,6 +72,26 @@ function parseArgs(argv) {
         return { error: "--target-label requires a label." };
       }
       options.targetLabel = value;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--scan-id") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        return { error: "--scan-id requires an ID." };
+      }
+      options.scanId = value;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--append-log") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        return { error: "--append-log requires a CSV path." };
+      }
+      options.appendLog = value;
       i += 1;
       continue;
     }
@@ -76,6 +119,7 @@ try {
   const result = scanTarget(parsed.target);
   const displayResult = parsed.options.targetLabel ? { ...result, target: parsed.options.targetLabel } : result;
   const timestamp = new Date().toISOString().replaceAll(":", "-").replace(/\.\d{3}Z$/, "Z");
+  const scanId = parsed.options.scanId || `scan-${timestamp.replaceAll("-", "").replace("T", "-").replace("Z", "")}`;
   const outDir = path.resolve(parsed.options.outDir || path.join(process.cwd(), "agentsec-scan-output", timestamp));
 
   fs.mkdirSync(outDir, { recursive: true });
@@ -100,19 +144,31 @@ try {
   );
   console.log(`Risk score: ${result.summary.risk_score}/100`);
   console.log("");
+  const scanLogRow = buildScanLogRow(result, {
+    scanId,
+    targetLabel: parsed.options.targetLabel || "scan-target"
+  });
+
+  if (parsed.options.appendLog) {
+    const logPath = path.resolve(parsed.options.appendLog);
+    appendScanLog(logPath, scanLogRow);
+    console.log(`Appended scan log: ${logPath}`);
+    console.log("");
+  }
+
   console.log("Suggested scan-log CSV row:");
-  console.log(buildScanLogRow(result, parsed.options.targetLabel || "scan-target"));
+  console.log(scanLogRow);
 } catch (error) {
   console.error(`private scan failed: ${error.message}`);
   process.exit(1);
 }
 
-function buildScanLogRow(result, targetLabel) {
+function buildScanLogRow(result, { scanId, targetLabel }) {
   const topFinding = result.findings[0]?.id || "";
   const today = new Date().toISOString().slice(0, 10);
 
   return [
-    "scan-XXX",
+    scanId,
     today,
     "",
     targetLabel,
@@ -131,6 +187,18 @@ function buildScanLogRow(result, targetLabel) {
     "",
     ""
   ].map(csvEscape).join(",");
+}
+
+function appendScanLog(logPath, row) {
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+
+  const exists = fs.existsSync(logPath);
+  const current = exists ? fs.readFileSync(logPath, "utf8") : "";
+  const needsHeader = !exists || current.trim().length === 0;
+  const prefix = current && !current.endsWith("\n") ? "\n" : "";
+  const content = `${prefix}${needsHeader ? `${SCAN_LOG_HEADER}\n` : ""}${row}\n`;
+
+  fs.appendFileSync(logPath, content);
 }
 
 function csvEscape(value) {

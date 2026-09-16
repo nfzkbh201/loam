@@ -5,5 +5,7 @@ agentsec-report.md
 agentsec-research.json
 agentsec-scan-output/
 scan-output/
+research/scan-log.csv
+research/*-scan-log.csv
 *.sarif
 *.log
