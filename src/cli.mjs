@@ -29,6 +29,7 @@ function usage() {
 
 Usage:
   loam discover [path] [--json]
+  loam scan-pack <path> [--out <dir>] [--label <text>]
   loam scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
   loam scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
   loam diff --baseline <file> --current <file> [--json] [--markdown <file>] [--fail-on <severity>]
@@ -39,6 +40,7 @@ Usage:
 
 Examples:
   loam discover .
+  loam scan-pack . --label "cursor-user-001"
   loam scan-known .
   loam scan .
   loam scan ./fixtures/browser-shell-risk --json
@@ -346,6 +348,46 @@ function parseArgs(argv) {
     }
 
     return { command, options };
+  }
+
+  if (command === "scan-pack") {
+    const target = args.shift();
+    if (!target || target.startsWith("-")) {
+      return { error: "Missing scan-pack path." };
+    }
+
+    const options = {
+      out: "loam-scan",
+      label: null
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--out") {
+        const outPath = args[i + 1];
+        if (!outPath || outPath.startsWith("-")) {
+          return { error: "--out requires a directory path." };
+        }
+        options.out = outPath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--label") {
+        const label = args[i + 1];
+        if (!label || label.startsWith("-")) {
+          return { error: "--label requires text." };
+        }
+        options.label = label;
+        i += 1;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, target, options };
   }
 
   if (command === "discover" || command === "scan-known") {
@@ -674,6 +716,17 @@ try {
     process.exit(0);
   }
 
+  if (parsed.command === "scan-pack") {
+    const result = scanTarget(parsed.target);
+    const output = writeScanPack({ result, target: parsed.target, options: parsed.options });
+
+    console.log(`Loam scan pack written to ${output.directory}`);
+    console.log(`Private report: ${output.files.privateReport}`);
+    console.log(`Redacted report: ${output.files.redactedReport}`);
+    console.log(`Research export: ${output.files.research}`);
+    process.exit(0);
+  }
+
   let result;
 
   if (parsed.command === "scan-known") {
@@ -793,6 +846,62 @@ function readJsonFile(filePath) {
   } catch (error) {
     throw new Error(`Could not read JSON file ${resolved}: ${error.message}`);
   }
+}
+
+function writeScanPack({ result, target, options }) {
+  const directory = path.resolve(options.out);
+  fs.mkdirSync(directory, { recursive: true });
+
+  const files = {
+    privateReport: path.join(directory, "private-report.md"),
+    redactedReport: path.join(directory, "redacted-report.md"),
+    privateAbom: path.join(directory, "private-abom.json"),
+    redactedAbom: path.join(directory, "redacted-abom.json"),
+    research: path.join(directory, "research.json"),
+    summary: path.join(directory, "summary.txt")
+  };
+
+  fs.writeFileSync(files.privateReport, buildMarkdownReport(result));
+  fs.writeFileSync(files.redactedReport, buildRedactedMarkdownReport(result));
+  fs.writeFileSync(files.privateAbom, JSON.stringify(buildAbomExport(result), null, 2));
+  fs.writeFileSync(files.redactedAbom, JSON.stringify(buildRedactedAbomExport(result), null, 2));
+  fs.writeFileSync(files.research, JSON.stringify(buildResearchExport(result), null, 2));
+  fs.writeFileSync(files.summary, buildScanPackSummary({ result, target, label: options.label, files }));
+
+  return {
+    directory,
+    files
+  };
+}
+
+function buildScanPackSummary({ result, target, label, files }) {
+  return [
+    "Loam Scan Pack",
+    "",
+    `Target label: ${label || "not provided"}`,
+    `Target path: ${path.resolve(target)}`,
+    `Risk score: ${result.summary.risk_score}/100`,
+    `Findings: ${result.summary.total_findings}`,
+    `Critical: ${result.summary.by_severity.critical}`,
+    `High: ${result.summary.by_severity.high}`,
+    `Medium: ${result.summary.by_severity.medium}`,
+    `Low: ${result.summary.by_severity.low}`,
+    "",
+    "Files",
+    "- private-report.md: keep private; includes exact paths and evidence",
+    "- redacted-report.md: shareable after review",
+    "- private-abom.json: keep private; full agent inventory",
+    "- redacted-abom.json: shareable aggregate inventory",
+    "- research.json: redacted aggregate export for research",
+    "",
+    "Suggested sharing flow",
+    "1. Review private-report.md locally.",
+    "2. Share redacted-report.md only if you are comfortable with the anonymized findings.",
+    "3. Share research.json only if you explicitly approve aggregate research use.",
+    "",
+    `Generated files are in: ${path.dirname(files.summary)}`,
+    ""
+  ].join("\n");
 }
 
 function printApprovals(result) {

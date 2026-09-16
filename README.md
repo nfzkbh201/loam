@@ -18,8 +18,9 @@ It creates a small Agent Bill of Materials (ABOM) and flags critical risk paths 
 ## Quick Start
 
 ```bash
-cd agentsec
+cd loam
 node ./src/cli.mjs discover .
+node ./src/cli.mjs scan-pack . --label "cursor-user-001"
 node ./src/cli.mjs scan-known .
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk
 node ./src/cli.mjs scan ./fixtures/unknown-mcp-risk --json
@@ -173,6 +174,14 @@ node ./src/cli.mjs scan-known . \
   --redacted-abom loam-redacted-abom.json \
   --research loam-research.json
 ```
+
+Create a scan pack for a tester or design partner:
+
+```bash
+node ./src/cli.mjs scan-pack . --label "cursor-user-001"
+```
+
+This writes `loam-scan/` with a private report, redacted report, private ABOM, redacted ABOM, research export, and summary.
 
 ## Demo Fixtures
 

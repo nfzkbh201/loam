@@ -4,8 +4,13 @@ coverage/
 agentsec-report.md
 agentsec-research.json
 agentsec-scan-output/
+loam-scan/
+loam-*.md
+loam-*.json
+loam-*.sarif
 scan-output/
 research/scan-log.csv
 research/*-scan-log.csv
 *.sarif
 *.log
+*.tgz

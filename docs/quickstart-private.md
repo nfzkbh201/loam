@@ -5,15 +5,15 @@ Use this when sharing the private repo with an early tester or design partner.
 ## Clone
 
 ```bash
-git clone git@github.com:nfzkbh201/agentsec.git
-cd agentsec
+git clone git@github.com:nfzkbh201/agentsec.git loam
+cd loam
 ```
 
 If SSH is not configured:
 
 ```bash
-git clone https://github.com/nfzkbh201/agentsec.git
-cd agentsec
+git clone https://github.com/nfzkbh201/agentsec.git loam
+cd loam
 ```
 
 ## Check Known Config Locations
@@ -44,6 +44,14 @@ This scans discovered config locations and writes:
 - `loam-research.json`: redacted aggregate export, only share with permission
 
 Known config discovery includes MCP configs plus project instruction files such as `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and Cursor `.cursor/rules`.
+
+## Create A Scan Pack
+
+```bash
+node ./src/cli.mjs scan-pack /path/to/project --label "agent-project"
+```
+
+This creates `loam-scan/` with private and redacted reports, private and redacted ABOMs, a redacted research export, and a short summary.
 
 ## Run A Specific Project Scan
 
