@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Loam | Agent Authority Mapping</title>
+    <meta
+      name="description"
+      content="Loam maps the tools, instructions, secrets, and deployment paths available to AI agents before they become production risk."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/svg+xml" href="./assets/loam-logo.svg" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Primary">
+      <a class="brand" href="#top" aria-label="Loam home">
+        <img src="./assets/loam-logo.svg" alt="" width="28" height="28" />
+        <span>Loam</span>
+      </a>
+      <nav>
+        <a href="#product">Product</a>
+        <a href="#report">Report</a>
+        <a href="#research">Research</a>
+      </nav>
+      <a class="nav-cta" href="#pilot">Private beta</a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <canvas id="authority-map" aria-hidden="true"></canvas>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Agent security for the machine economy</p>
+            <h1 id="hero-title">Map agent authority before it ships.</h1>
+            <p class="hero-lede">
+              Loam turns agent instructions, MCP servers, shell access, secrets, and deploy rights into an Agent Bill of Materials.
+              The first scan runs locally and shows the risky authority paths hiding in plain sight.
+            </p>
+            <div class="hero-actions" aria-label="Primary actions">
+              <a class="button button-primary" href="#pilot">Run a pilot scan</a>
+              <a class="button button-secondary" href="#report">See report format</a>
+            </div>
+          </div>
+
+          <aside class="terminal" aria-label="Loam scan preview">
+            <div class="terminal-top">
+              <span></span>
+              <span></span>
+              <span></span>
+              <strong>loam scan-pack</strong>
+            </div>
+            <pre><code>$ loam scan-pack ./agent-workspace
+
+Risk score: 82 / 100
+Findings: 2 critical, 3 high
+
+Critical
+web_access -> agent_context -> shell_exec
+Untrusted content can reach shell tools.
+
+High
+repo_write -> deployment_workflow
+Agent commits can trigger production paths.</code></pre>
+          </aside>
+        </div>
+      </section>
+
+      <section class="signal-strip" aria-label="Loam coverage">
+        <span>Instructions</span>
+        <span>MCP</span>
+        <span>Secrets</span>
+        <span>Shell</span>
+        <span>Repo writes</span>
+        <span>Deploys</span>
+      </section>
+
+      <section class="section product" id="product">
+        <div class="section-heading">
+          <p class="eyebrow">The missing layer</p>
+          <h2>Security reviews are still written for humans. Agent workspaces changed the threat model.</h2>
+        </div>
+        <div class="three-up">
+          <article>
+            <span class="metric">01</span>
+            <h3>Find authority paths</h3>
+            <p>Loam traces how browser content, project instructions, MCP tools, credentials, and shell access can combine into risky execution chains.</p>
+          </article>
+          <article>
+            <span class="metric">02</span>
+            <h3>Generate an ABOM</h3>
+            <p>Every scan produces a practical Agent Bill of Materials: what agents can read, write, call, deploy, and approve.</p>
+          </article>
+          <article>
+            <span class="metric">03</span>
+            <h3>Review before rollout</h3>
+            <p>Teams get a concise report they can attach to PRs, onboarding docs, vendor reviews, or internal AI safety reviews.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section report" id="report">
+        <div class="report-panel">
+          <div>
+            <p class="eyebrow">Report surface</p>
+            <h2>Readable enough for founders. Specific enough for builders.</h2>
+            <p>
+              The output is built to make one decision easy: can this agent setup ship, or does the team need to separate tools,
+              credentials, and approval boundaries first?
+            </p>
+          </div>
+          <div class="report-card" aria-label="Example report fields">
+            <div class="report-row">
+              <span>Agent Bill of Materials</span>
+              <strong>7 capabilities</strong>
+            </div>
+            <div class="report-row critical">
+              <span>Untrusted content to shell</span>
+              <strong>Critical</strong>
+            </div>
+            <div class="report-row high">
+              <span>Repo write near deploy</span>
+              <strong>High</strong>
+            </div>
+            <div class="report-row">
+              <span>Environment files exposed</span>
+              <strong>0 found</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section research" id="research">
+        <div class="section-heading compact">
+          <p class="eyebrow">Research-led build</p>
+          <h2>Start with scans, turn the pattern library into the product.</h2>
+        </div>
+        <div class="timeline">
+          <div>
+            <span>Now</span>
+            <p>Scan public agent repos and open-source templates to build the first risk taxonomy.</p>
+          </div>
+          <div>
+            <span>Next</span>
+            <p>Run private design-partner scans for founders using Cursor, Claude Code, MCP, and deployment agents.</p>
+          </div>
+          <div>
+            <span>Then</span>
+            <p>Ship policy packs, CI checks, and ABOM exports that fit into existing engineering review workflows.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section pilot" id="pilot">
+        <div class="pilot-inner">
+          <p class="eyebrow">Private beta</p>
+          <h2>Using coding agents in a real repo?</h2>
+          <p>
+            Loam is for small teams adopting agentic tools before they have an agent security program. The first wedge is simple:
+            run a local scan, review the authority map, and tighten the highest-risk paths.
+          </p>
+          <a class="button button-primary" href="mailto:founders@loam.local?subject=Loam%20pilot%20scan">Request pilot access</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#top" aria-label="Loam home">
+        <img src="./assets/loam-logo.svg" alt="" width="24" height="24" />
+        <span>Loam</span>
+      </a>
+      <p>Agent authority mapping for teams building with AI workers.</p>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
