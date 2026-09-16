@@ -8,6 +8,12 @@ export function buildResearchExport(result) {
     }
   }
 
+  for (const instruction of result.abom.agent_instructions) {
+    for (const capability of instruction.capabilities) {
+      capabilityCounts[capability] = (capabilityCounts[capability] || 0) + 1;
+    }
+  }
+
   for (const finding of result.findings) {
     findingCounts[finding.id] = (findingCounts[finding.id] || 0) + 1;
   }
@@ -25,6 +31,7 @@ export function buildResearchExport(result) {
     inventory: {
       mcp_config_file_count: result.abom.mcp_config_files.length,
       mcp_server_count: result.abom.mcp_servers.length,
+      agent_instruction_file_count: result.abom.agent_instructions.length,
       github_workflow_count: result.abom.github_workflows.length,
       env_file_count: result.abom.env_files.length,
       secret_like_env_key_count: result.abom.env_files.reduce(
@@ -91,7 +98,9 @@ export function redactTargetLabel(label) {
 
 const SAFE_PATH_SEGMENTS = new Set([
   "agent_context",
+  "agent_instruction",
   "agent_runtime",
+  "credentials",
   "customer_data",
   "deployment_workflow",
   "env_file",
@@ -101,6 +110,8 @@ const SAFE_PATH_SEGMENTS = new Set([
   "repo_write",
   "secrets_access",
   "shell_exec",
+  "no_visible_approval",
+  "sensitive_capability",
   "unknown_publisher",
   "web_access"
 ]);

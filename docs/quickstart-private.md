@@ -43,6 +43,8 @@ This scans discovered config locations and writes:
 - `loam-redacted-abom.json`: redacted Agent Bill of Materials
 - `loam-research.json`: redacted aggregate export, only share with permission
 
+Known config discovery includes MCP configs plus project instruction files such as `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and Cursor `.cursor/rules`.
+
 ## Run A Specific Project Scan
 
 ```bash

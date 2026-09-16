@@ -88,6 +88,40 @@ test("recognizes Claude Desktop MCP config files", () => {
   );
 });
 
+test("detects Cursor project rule instruction risks", () => {
+  const result = scanTarget(path.join(fixtures, "cursor-rules-risk"));
+  const instruction = result.abom.agent_instructions.find((item) => item.file === ".cursor/rules/agent.mdc");
+
+  assert.ok(instruction);
+  assert.equal(instruction.capabilities.includes("web_access"), true);
+  assert.equal(instruction.capabilities.includes("shell_exec"), true);
+  assert.equal(instruction.capabilities.includes("secrets_access"), true);
+  assert.equal(instruction.risk_signals.includes("no_visible_approval"), true);
+  assert.equal(
+    result.findings.some((finding) => finding.id === "untrusted-web-content-can-reach-shell-execution"),
+    true
+  );
+  assert.equal(
+    result.findings.some((finding) => finding.id === "agent-instructions-reduce-approval-around-sensitive-capabilities"),
+    true
+  );
+});
+
+test("detects Claude project instruction repo and deployment risks", () => {
+  const result = scanTarget(path.join(fixtures, "claude-instructions-risk"));
+  const instruction = result.abom.agent_instructions.find((item) => item.file === "CLAUDE.md");
+
+  assert.ok(instruction);
+  assert.equal(instruction.capabilities.includes("repo_write"), true);
+  assert.equal(instruction.capabilities.includes("deploy"), true);
+  assert.equal(instruction.risk_signals.includes("repo_write_instruction"), true);
+  assert.equal(instruction.risk_signals.includes("deployment_instruction"), true);
+  assert.equal(
+    result.findings.some((finding) => finding.id === "agent-instructions-encourage-repository-writes-near-deployment-paths"),
+    true
+  );
+});
+
 test("research export strips names, args, config paths, and env keys", () => {
   const result = scanTarget(path.join(fixtures, "web-env-secrets-risk"));
   const research = buildResearchExport(result);
@@ -150,10 +184,35 @@ test("ABOM exports full and redacted inventories", () => {
   assert.equal(full.abom.mcp_servers.some((server) => server.package === "@modelcontextprotocol/server-browser"), true);
   assert.equal(redacted.redacted, true);
   assert.equal(redacted.abom.mcp_server_count, 2);
+  assert.equal(redacted.abom.agent_instruction_file_count, 0);
   assert.equal(redactedText.includes("@modelcontextprotocol/server-browser"), false);
   assert.equal(redactedText.includes("mcp-shell"), false);
   assert.equal(redactedText.includes(".mcp.json"), false);
   assert.equal(redactedText.includes("Cursor config"), true);
+});
+
+test("ABOM exports include redacted agent instruction inventory", () => {
+  const result = scanTargets([
+    {
+      label: "Cursor project rules",
+      path: path.join(fixtures, "cursor-rules-risk")
+    }
+  ]);
+
+  const full = buildAbomExport(result);
+  const redacted = buildRedactedAbomExport(result);
+  const research = buildResearchExport(result);
+  const markdown = buildMarkdownReport(result);
+  const redactedMarkdown = buildRedactedMarkdownReport(result);
+
+  assert.equal(full.abom.agent_instructions.some((instruction) => instruction.file.includes("agent.mdc")), true);
+  assert.equal(redacted.abom.agent_instruction_file_count, 1);
+  assert.equal(redacted.abom.agent_instructions[0].target_label, "Cursor config");
+  assert.equal(redacted.abom.agent_instructions[0].capabilities.includes("shell_exec"), true);
+  assert.equal(research.inventory.agent_instruction_file_count, 1);
+  assert.equal(research.inventory.capability_counts.shell_exec >= 1, true);
+  assert.equal(markdown.includes("| Agent instruction file | Capabilities | Risk signals |"), true);
+  assert.equal(redactedMarkdown.includes("- Agent instruction files: 1"), true);
 });
 
 test("ABOM diff flags newly introduced critical risk paths", () => {
@@ -171,6 +230,20 @@ test("ABOM diff flags newly introduced critical risk paths", () => {
     true
   );
   assert.equal(shouldFailDiff(diff, "critical"), true);
+});
+
+test("ABOM diff flags newly introduced agent instruction files", () => {
+  const baseline = buildAbomExport(scanTarget(path.join(fixtures, "safe-agent")));
+  const current = buildAbomExport(scanTarget(path.join(fixtures, "cursor-rules-risk")));
+  const diff = diffAboms({ baseline, current });
+  const markdown = buildDiffMarkdownReport(diff);
+
+  assert.equal(
+    diff.changes.some((change) => change.id.startsWith("agent-instruction-added-cursor-rules-agent-mdc")),
+    true
+  );
+  assert.equal(markdown.includes("## New Agent Instructions"), true);
+  assert.equal(markdown.includes("agent_instruction"), true);
 });
 
 test("ABOM diff markdown summarizes risk paths for PR comments", () => {

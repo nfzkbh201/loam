@@ -10,7 +10,7 @@ An ABOM should include:
 - models
 - MCP servers
 - tools and plugins
-- prompts and policies
+- prompts, project instructions, and policies
 - reachable files
 - reachable APIs
 - credentials and env keys by name only
@@ -94,6 +94,7 @@ The diff reports:
 
 - added or removed capabilities
 - added or removed MCP servers
+- added or removed agent instruction files
 - added or removed GitHub workflow files
 - added or removed env files
 - newly introduced risk paths, such as `web_access -> shell_exec`

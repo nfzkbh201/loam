@@ -26,6 +26,7 @@ export function buildRedactedAbomExport(result) {
     abom: {
       mcp_config_file_count: result.abom.mcp_config_files.length,
       mcp_server_count: result.abom.mcp_servers.length,
+      agent_instruction_file_count: result.abom.agent_instructions.length,
       github_workflow_count: result.abom.github_workflows.length,
       env_file_count: result.abom.env_files.length,
       secret_like_env_key_count: result.abom.env_files.reduce((count, file) => count + file.secret_like_keys.length, 0),
@@ -39,6 +40,11 @@ export function buildRedactedAbomExport(result) {
       github_workflows: result.abom.github_workflows.map((workflow) => ({
         target_label: redactTargetLabel(workflow.target_label) || null,
         risk_signals: workflow.risk_signals
+      })),
+      agent_instructions: result.abom.agent_instructions.map((instruction) => ({
+        target_label: redactTargetLabel(instruction.target_label) || null,
+        capabilities: instruction.capabilities,
+        risk_signals: instruction.risk_signals
       })),
       env_files: result.abom.env_files.map((file) => ({
         target_label: redactTargetLabel(file.target_label) || null,

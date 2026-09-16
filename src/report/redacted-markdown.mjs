@@ -34,6 +34,7 @@ export function buildRedactedMarkdownReport(result) {
   lines.push("");
   lines.push(`- MCP config files: ${result.abom.mcp_config_files.length}`);
   lines.push(`- MCP servers: ${result.abom.mcp_servers.length}`);
+  lines.push(`- Agent instruction files: ${result.abom.agent_instructions.length}`);
   lines.push(`- GitHub workflow files: ${result.abom.github_workflows.length}`);
   lines.push(`- Env files: ${result.abom.env_files.length}`);
   lines.push(`- Secret-like env keys: ${result.abom.env_files.reduce((count, file) => count + file.secret_like_keys.length, 0)}`);

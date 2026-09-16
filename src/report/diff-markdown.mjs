@@ -51,6 +51,24 @@ export function buildDiffMarkdownReport(diff) {
     lines.push("");
   }
 
+  const addedInstructions = diff.changes.filter((change) => change.type === "agent_instruction" && change.operation === "added");
+  if (addedInstructions.length > 0) {
+    lines.push("## New Agent Instructions");
+    lines.push("");
+    lines.push("| Severity | Instruction | Capabilities | Risk signals |");
+    lines.push("| --- | --- | --- | --- |");
+
+    for (const change of addedInstructions) {
+      lines.push(
+        `| ${escapeCell(change.severity)} | ${escapeCell(change.subject)} | ` +
+          `${escapeCell((change.capabilities || []).join(", ") || "none")} | ` +
+          `${escapeCell((change.risk_signals || []).join(", ") || "none")} |`
+      );
+    }
+
+    lines.push("");
+  }
+
   lines.push("## All Changes");
   lines.push("");
   lines.push("| Severity | Change | Type | Subject |");

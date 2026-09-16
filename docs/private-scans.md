@@ -10,6 +10,8 @@ Can I run a local scanner against your agent/MCP config and send you a private r
 It does not upload data. It can also produce a redacted research export that strips paths, tool names, package names, command args, and env keys.
 ```
 
+The scanner also checks project instruction files such as `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and Cursor `.cursor/rules` files for risky authority language.
+
 ## Local Report
 
 ```bash
@@ -44,6 +46,7 @@ The export keeps:
 - total finding counts
 - severity counts
 - capability counts
+- agent instruction file counts
 - finding IDs
 - evidence types
 

@@ -39,3 +39,26 @@ test("discovers Claude Desktop config candidates without reading contents", () =
   assert.equal(claude.exists, true);
   assert.equal(Object.prototype.hasOwnProperty.call(claude, "contents"), false);
 });
+
+test("discovers project agent instruction targets by existence", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "loam-discovery-"));
+  fs.mkdirSync(path.join(tmp, ".cursor", "rules"), { recursive: true });
+  fs.writeFileSync(path.join(tmp, "CLAUDE.md"), "# instructions");
+  fs.writeFileSync(path.join(tmp, ".cursor", "rules", "agent.mdc"), "always apply");
+
+  const results = discoverTargets({
+    root: tmp,
+    home: path.join(tmp, "home"),
+    platform: "darwin"
+  });
+
+  const claude = results.find((result) => result.label === "Agent instruction (CLAUDE.md)");
+  const cursorRules = results.find((result) => result.type === "cursor_project_rules");
+
+  assert.ok(claude);
+  assert.equal(claude.exists, true);
+  assert.equal(claude.scan_hint, tmp);
+  assert.ok(cursorRules);
+  assert.equal(cursorRules.exists, true);
+  assert.equal(cursorRules.scan_hint, tmp);
+});

@@ -31,6 +31,7 @@ export function buildMarkdownReport(result) {
   lines.push("");
   lines.push(`- MCP config files: ${result.abom.mcp_config_files.length}`);
   lines.push(`- MCP servers: ${result.abom.mcp_servers.length}`);
+  lines.push(`- Agent instruction files: ${result.abom.agent_instructions.length}`);
   lines.push(
     `- Capabilities: ${
       result.abom.capabilities.length ? result.abom.capabilities.map((item) => `\`${item}\``).join(", ") : "none detected"
@@ -46,6 +47,20 @@ export function buildMarkdownReport(result) {
       lines.push(
         `| ${escapeCell(server.name)} | ${escapeCell(server.package || "unknown")} | ` +
           `${escapeCell(server.capabilities.join(", ") || "none")} | ${escapeCell(server.config_file)} |`
+      );
+    }
+
+    lines.push("");
+  }
+
+  if (result.abom.agent_instructions.length > 0) {
+    lines.push("| Agent instruction file | Capabilities | Risk signals |");
+    lines.push("| --- | --- | --- |");
+
+    for (const instruction of result.abom.agent_instructions) {
+      lines.push(
+        `| ${escapeCell(instruction.file)} | ${escapeCell(instruction.capabilities.join(", ") || "none")} | ` +
+          `${escapeCell(instruction.risk_signals.join(", ") || "none")} |`
       );
     }
 
@@ -186,6 +201,13 @@ function formatEvidence(evidence) {
 
   if (evidence.type === "env_file") {
     return `\`${evidence.file}\` with secret-like keys ${evidence.secret_like_keys.map((item) => `\`${item}\``).join(", ")}`;
+  }
+
+  if (evidence.type === "agent_instruction") {
+    return (
+      `\`${evidence.file}\` with capabilities ${evidence.capabilities.map((item) => `\`${item}\``).join(", ") || "none"}` +
+      ` and signals ${evidence.risk_signals.map((item) => `\`${item}\``).join(", ") || "none"}`
+    );
   }
 
   return `\`${JSON.stringify(evidence)}\``;

@@ -135,6 +135,10 @@ The prototype scans:
 - `mcp-config.json`
 - `mcp_config.json`
 - `claude_desktop_config.json`
+- `CLAUDE.md`
+- `AGENTS.md`
+- `.cursorrules`
+- `.cursor/rules/*.{md,mdc,txt}`
 - root `package.json` scripts
 - `.github/workflows/*.yml`
 - `.github/workflows/*.yaml`
@@ -176,7 +180,9 @@ The `fixtures/` directory contains intentionally vulnerable agent setups:
 
 - `browser-shell-risk`
 - `broad-filesystem-risk`
+- `claude-instructions-risk`
 - `claude-desktop-config-risk`
+- `cursor-rules-risk`
 - `customer-data-web-risk`
 - `payment-no-approval-risk`
 - `repo-write-deploy-risk`

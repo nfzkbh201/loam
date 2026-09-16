@@ -61,6 +61,13 @@ export function diffAboms({ baseline, current }) {
     ...diffCapabilities(baselineAbom, currentAbom),
     ...diffRiskPaths(baselineAbom, currentAbom),
     ...diffComponents("mcp_server", baselineAbom.mcpServers, currentAbom.mcpServers, serverKey, serverChange),
+    ...diffComponents(
+      "agent_instruction",
+      baselineAbom.agentInstructions,
+      currentAbom.agentInstructions,
+      instructionKey,
+      instructionChange
+    ),
     ...diffComponents("github_workflow", baselineAbom.githubWorkflows, currentAbom.githubWorkflows, workflowKey, workflowChange),
     ...diffComponents("env_file", baselineAbom.envFiles, currentAbom.envFiles, envFileKey, envFileChange)
   ].sort((a, b) => SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] || a.title.localeCompare(b.title));
@@ -86,6 +93,7 @@ function normalizeAbom(exported) {
   return {
     capabilities: new Set(abom.capabilities || []),
     mcpServers: abom.mcp_servers || [],
+    agentInstructions: abom.agent_instructions || [],
     githubWorkflows: abom.github_workflows || [],
     envFiles: abom.env_files || [],
     deploymentWorkflowCount: countDeploymentWorkflows(abom.github_workflows || [])
@@ -215,6 +223,15 @@ function workflowKey(workflow) {
   return [workflow.target_label || "", workflow.file || "", JSON.stringify(workflow.risk_signals || [])].join("|");
 }
 
+function instructionKey(instruction) {
+  return [
+    instruction.target_label || "",
+    instruction.file || "",
+    JSON.stringify(instruction.capabilities || []),
+    JSON.stringify(instruction.risk_signals || [])
+  ].join("|");
+}
+
 function envFileKey(file) {
   return [
     file.target_label || "",
@@ -245,6 +262,35 @@ function serverChange({ operation, item }) {
       operation === "added"
         ? "Review the server package, command, args, env keys, and capability set before approving the change."
         : "No action required unless this removal was unexpected."
+  };
+}
+
+function instructionChange({ operation, item }) {
+  const capabilities = item.capabilities || [];
+  const riskSignals = item.risk_signals || [];
+  const highest = highestSeverity([
+    ...capabilities.map((capability) => CAPABILITY_SEVERITY[capability] || "medium"),
+    ...riskSignals.map((signal) => instructionSignalSeverity(signal))
+  ]);
+  const subject = item.file || item.target_label || "agent instruction";
+
+  return {
+    id: `agent-instruction-${operation}-${slug(subject)}-${slug([...capabilities, ...riskSignals].join("-"))}`,
+    type: "agent_instruction",
+    operation,
+    severity: operation === "added" ? highest || "medium" : "low",
+    title: `Agent instruction ${operation}: ${subject}`,
+    subject,
+    capabilities,
+    risk_signals: riskSignals,
+    why:
+      operation === "added"
+        ? "A project instruction file appeared in the current ABOM and may expand agent authority."
+        : "A project instruction file present in the baseline ABOM is no longer present.",
+    fix:
+      operation === "added"
+        ? "Review instruction files for approval bypasses, credential references, repo writes, and deployment language."
+        : "No action required unless this instruction change was unexpected."
   };
 }
 
@@ -293,6 +339,18 @@ function envFileChange({ operation, item }) {
         ? "Keep secrets outside agent-readable workspaces and prevent web-facing agents from reaching credentialed runtimes."
         : "No action required unless this env file change was unexpected."
   };
+}
+
+function instructionSignalSeverity(signal) {
+  if (signal === "credential_instruction" || signal === "repo_write_instruction") {
+    return "critical";
+  }
+
+  if (signal === "deployment_instruction" || signal === "no_visible_approval") {
+    return "high";
+  }
+
+  return "medium";
 }
 
 function summarizeChanges(changes) {

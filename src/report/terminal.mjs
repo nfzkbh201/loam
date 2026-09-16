@@ -38,6 +38,7 @@ export function printTerminalReport(result) {
   console.log(bold("Agent Bill of Materials"));
   console.log(`MCP configs: ${result.abom.mcp_config_files.length || 0}`);
   console.log(`MCP servers: ${result.abom.mcp_servers.length || 0}`);
+  console.log(`Agent instruction files: ${result.abom.agent_instructions.length || 0}`);
   console.log(`Capabilities: ${result.abom.capabilities.length ? result.abom.capabilities.join(", ") : "none detected"}`);
   console.log(`Env files: ${result.abom.env_files.length || 0}`);
 
@@ -113,6 +114,11 @@ export function printTerminalReport(result) {
           console.log(`  - package.json [${evidence.risk_signals.join(", ")}]`);
         } else if (evidence.type === "env_file") {
           console.log(`  - ${evidence.file} [secret-like keys: ${evidence.secret_like_keys.join(", ")}]`);
+        } else if (evidence.type === "agent_instruction") {
+          console.log(
+            `  - ${evidence.file} [capabilities: ${evidence.capabilities.join(", ") || "none"}; ` +
+              `signals: ${evidence.risk_signals.join(", ") || "none"}]`
+          );
         }
       }
     }

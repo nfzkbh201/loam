@@ -7,7 +7,11 @@ const SEVERITY_RANK = {
 
 export function runRules(context) {
   const servers = context.mcpConfigs.flatMap((config) => config.servers);
-  const capabilities = new Set(servers.flatMap((server) => server.capabilities));
+  const instructions = context.agentInstructions || [];
+  const capabilities = new Set([
+    ...servers.flatMap((server) => server.capabilities),
+    ...instructions.flatMap((instruction) => instruction.capabilities)
+  ]);
   const findings = [];
 
   if (capabilities.has("web_access") && capabilities.has("shell_exec")) {
@@ -17,7 +21,7 @@ export function runRules(context) {
       path: ["web_access", "agent_context", "shell_exec"],
       why: "A browser or fetch tool can introduce prompt-injected content that influences a shell-capable agent.",
       fix: "Separate browser-facing agents from shell tools, or require explicit approval before shell execution.",
-      evidence: serversWithAny(servers, ["web_access", "shell_exec"])
+      evidence: capabilityEvidence({ servers, instructions, capabilities: ["web_access", "shell_exec"] })
     }));
   }
 
@@ -28,7 +32,7 @@ export function runRules(context) {
       path: ["web_access", "agent_context", "filesystem_write"],
       why: "Untrusted webpage text could steer an agent into editing or deleting local files.",
       fix: "Use read-only filesystem access for web-facing agents, or isolate writes behind an approval step.",
-      evidence: serversWithAny(servers, ["web_access", "filesystem_write"])
+      evidence: capabilityEvidence({ servers, instructions, capabilities: ["web_access", "filesystem_write"] })
     }));
   }
 
@@ -52,7 +56,7 @@ export function runRules(context) {
       path: ["web_access", "agent_context", "secrets_access"],
       why: "Prompt-injected web content could influence an agent that also has credentials in its runtime.",
       fix: "Remove secrets from browser-facing agent runtimes or put credentialed tools behind approval.",
-      evidence: serversWithAny(servers, ["web_access", "secrets_access"])
+      evidence: capabilityEvidence({ servers, instructions, capabilities: ["web_access", "secrets_access"] })
     }));
   }
 
@@ -76,9 +80,54 @@ export function runRules(context) {
       fix: "Require human review for agent-authored commits and separate deployment credentials from agent workflows.",
       evidence: [
         ...serversWithAny(servers, ["repo_write"]),
+        ...instructionsWithAny(instructions, ["repo_write"]),
+        ...instructionEvidence(instructions, ["deployment_instruction"]),
         ...workflowEvidence(context.githubWorkflows),
         ...scriptEvidence(context.packageJson)
       ]
+    }));
+  }
+
+  if (instructions.some((instruction) => instruction.risk_signals.includes("repo_write_instruction")) && hasDeploySignal(context)) {
+    findings.push(finding({
+      severity: "high",
+      title: "Agent instructions encourage repository writes near deployment paths",
+      path: ["agent_instruction", "repo_write", "deployment_workflow"],
+      why: "Project instructions that encourage commits, pushes, or merges near deployment automation can create an unsafe production-change path.",
+      fix: "Require human review for repository writes and separate deployment credentials from agent workflows.",
+      evidence: [
+        ...instructionEvidence(instructions, ["repo_write_instruction"]),
+        ...workflowEvidence(context.githubWorkflows),
+        ...scriptEvidence(context.packageJson)
+      ]
+    }));
+  }
+
+  if (
+    instructions.some((instruction) => instruction.risk_signals.includes("no_visible_approval")) &&
+    (capabilities.has("shell_exec") || capabilities.has("repo_write") || capabilities.has("deploy") || capabilities.has("payment"))
+  ) {
+    findings.push(finding({
+      severity: "high",
+      title: "Agent instructions reduce approval around sensitive capabilities",
+      path: ["agent_instruction", "no_visible_approval", "sensitive_capability"],
+      why: "Instructions that tell agents not to ask or to act automatically can bypass human review around shell, repo, deploy, or payment actions.",
+      fix: "Remove blanket auto-approval instructions and require explicit review for sensitive tool use.",
+      evidence: instructionEvidence(instructions, ["no_visible_approval"])
+    }));
+  }
+
+  if (
+    instructions.some((instruction) => instruction.risk_signals.includes("credential_instruction")) &&
+    (capabilities.has("shell_exec") || capabilities.has("web_access"))
+  ) {
+    findings.push(finding({
+      severity: "high",
+      title: "Agent instructions reference credentials near web or shell capabilities",
+      path: ["agent_instruction", "credentials", "agent_runtime"],
+      why: "Project instructions that mention secrets, tokens, or env files near web or shell-capable agents increase accidental exposure risk.",
+      fix: "Keep secrets outside agent-readable instructions and avoid mixing credentialed workflows with web or shell tools.",
+      evidence: instructionEvidence(instructions, ["credential_instruction"])
     }));
   }
 
@@ -100,7 +149,7 @@ export function runRules(context) {
       path: ["web_access", "agent_context", "customer_data"],
       why: "Mixing untrusted web content and customer-data tools increases exfiltration and bad-action risk.",
       fix: "Split browsing and customer-data workflows into separate agents with a narrow handoff.",
-      evidence: serversWithAny(servers, ["web_access", "customer_data"])
+      evidence: capabilityEvidence({ servers, instructions, capabilities: ["web_access", "customer_data"] })
     }));
   }
 
@@ -137,7 +186,7 @@ function finding({ severity, title, path, why, fix, evidence }) {
     path,
     why,
     fix,
-    evidence
+    evidence: dedupeEvidence(evidence)
   };
 }
 
@@ -149,6 +198,24 @@ function serversWithAny(servers, capabilities) {
   return servers
     .filter((server) => capabilities.some((capability) => server.capabilities.includes(capability)))
     .map(serverEvidence);
+}
+
+function capabilityEvidence({ servers, instructions, capabilities }) {
+  return [
+    ...serversWithAny(servers, capabilities),
+    ...instructionsWithAny(instructions, capabilities)
+  ];
+}
+
+function instructionsWithAny(instructions, capabilities) {
+  return instructions
+    .filter((instruction) => capabilities.some((capability) => instruction.capabilities.includes(capability)))
+    .map((instruction) => ({
+      type: "agent_instruction",
+      file: instruction.relativePath,
+      capabilities: instruction.capabilities,
+      risk_signals: instruction.risk_signals
+    }));
 }
 
 function serverEvidence(server) {
@@ -195,6 +262,17 @@ function envEvidence(envFiles) {
     }));
 }
 
+function instructionEvidence(instructions, riskSignals) {
+  return instructions
+    .filter((instruction) => riskSignals.some((signal) => instruction.risk_signals.includes(signal)))
+    .map((instruction) => ({
+      type: "agent_instruction",
+      file: instruction.relativePath,
+      capabilities: instruction.capabilities,
+      risk_signals: instruction.risk_signals
+    }));
+}
+
 function hasSecretLikeEnvFile(context) {
   return context.envFiles.some((file) => file.secretLikeKeys.length > 0);
 }
@@ -202,7 +280,8 @@ function hasSecretLikeEnvFile(context) {
 function hasDeploySignal(context) {
   return (
     context.packageJson.riskSignals.includes("deploy_script") ||
-    context.githubWorkflows.some((workflow) => workflow.riskSignals.includes("deployment_workflow"))
+    context.githubWorkflows.some((workflow) => workflow.riskSignals.includes("deployment_workflow")) ||
+    (context.agentInstructions || []).some((instruction) => instruction.risk_signals.includes("deployment_instruction"))
   );
 }
 
@@ -225,6 +304,23 @@ function dedupe(findings) {
       seen.add(key);
       output.push(item);
     }
+  }
+
+  return output;
+}
+
+function dedupeEvidence(evidence) {
+  const seen = new Set();
+  const output = [];
+
+  for (const item of evidence || []) {
+    const key = JSON.stringify(item);
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    output.push(item);
   }
 
   return output;

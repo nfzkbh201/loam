@@ -4,6 +4,7 @@ import { parseMcpConfigs } from "./parsers/mcp.mjs";
 import { parsePackageJson } from "./parsers/package-json.mjs";
 import { parseGithubWorkflows } from "./parsers/github-actions.mjs";
 import { parseEnvFiles } from "./parsers/env.mjs";
+import { parseAgentInstructions } from "./parsers/agent-instructions.mjs";
 import { runRules } from "./rules/index.mjs";
 
 export function scanTarget(targetPath) {
@@ -18,7 +19,8 @@ export function scanTarget(targetPath) {
     mcpConfigs: parseMcpConfigs(root),
     packageJson: parsePackageJson(root),
     githubWorkflows: parseGithubWorkflows(root),
-    envFiles: parseEnvFiles(root)
+    envFiles: parseEnvFiles(root),
+    agentInstructions: parseAgentInstructions(root)
   };
 
   const findings = runRules(context);
@@ -58,7 +60,8 @@ export function scanTargets(targets) {
       capabilities,
       package_scripts: {},
       github_workflows: results.flatMap((result) => result.abom.github_workflows),
-      env_files: results.flatMap((result) => result.abom.env_files)
+      env_files: results.flatMap((result) => result.abom.env_files),
+      agent_instructions: results.flatMap((result) => result.abom.agent_instructions)
     },
     summary,
     findings
@@ -98,6 +101,11 @@ function labelResult(result, label) {
         ...envFile,
         target_label: label,
         file: `${label}: ${envFile.file}`
+      })),
+      agent_instructions: result.abom.agent_instructions.map((instruction) => ({
+        ...instruction,
+        target_label: label,
+        file: `${label}: ${instruction.file}`
       }))
     },
     findings: result.findings.map((finding) => ({
@@ -117,7 +125,7 @@ function labelEvidence(evidence, label) {
     };
   }
 
-  if (evidence.type === "github_workflow" || evidence.type === "env_file") {
+  if (evidence.type === "github_workflow" || evidence.type === "env_file" || evidence.type === "agent_instruction") {
     return {
       ...evidence,
       target_label: label,
@@ -157,7 +165,10 @@ function summarize(findings) {
 
 function buildAbom(context) {
   const servers = context.mcpConfigs.flatMap((config) => config.servers);
-  const capabilities = Array.from(new Set(servers.flatMap((server) => server.capabilities))).sort();
+  const capabilities = Array.from(new Set([
+    ...servers.flatMap((server) => server.capabilities),
+    ...context.agentInstructions.flatMap((instruction) => instruction.capabilities)
+  ])).sort();
 
   return {
     mcp_config_files: context.mcpConfigs.map((config) => config.relativePath),
@@ -181,6 +192,11 @@ function buildAbom(context) {
       file: file.relativePath,
       keys: file.keys,
       secret_like_keys: file.secretLikeKeys
+    })),
+    agent_instructions: context.agentInstructions.map((instruction) => ({
+      file: instruction.relativePath,
+      capabilities: instruction.capabilities,
+      risk_signals: instruction.risk_signals
     }))
   };
 }

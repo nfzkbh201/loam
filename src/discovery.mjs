@@ -10,6 +10,12 @@ const MCP_CONFIG_NAMES = [
   "claude_desktop_config.json"
 ];
 
+const PROJECT_INSTRUCTION_NAMES = [
+  "CLAUDE.md",
+  "AGENTS.md",
+  ".cursorrules"
+];
+
 export function discoverTargets({ root = process.cwd(), home = os.homedir(), platform = process.platform } = {}) {
   const candidates = [
     ...projectCandidates(root),
@@ -24,12 +30,26 @@ export function discoverTargets({ root = process.cwd(), home = os.homedir(), pla
 
 function projectCandidates(root) {
   const normalizedRoot = path.resolve(root);
-  return MCP_CONFIG_NAMES.map((name) => ({
+  return [
+    ...MCP_CONFIG_NAMES.map((name) => ({
     type: "project_mcp_config",
     label: `Project config (${name})`,
     path: path.join(normalizedRoot, name),
     scan_hint: normalizedRoot
-  }));
+    })),
+    ...PROJECT_INSTRUCTION_NAMES.map((name) => ({
+      type: "project_agent_instruction",
+      label: `Agent instruction (${name})`,
+      path: path.join(normalizedRoot, name),
+      scan_hint: normalizedRoot
+    })),
+    {
+      type: "cursor_project_rules",
+      label: "Cursor project rules",
+      path: path.join(normalizedRoot, ".cursor", "rules"),
+      scan_hint: normalizedRoot
+    }
+  ];
 }
 
 function userCandidates(home, platform) {
