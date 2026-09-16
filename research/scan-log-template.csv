@@ -1,0 +1,2 @@
+scan_id,date,user_type,agent_framework,mcp_usage,critical_count,high_count,medium_count,low_count,risk_score,top_finding,surprise_factor,would_install_ci,would_pay,permission_redacted_export,permission_anonymous_quote,follow_up_requested,notes
+scan-001,YYYY-MM-DD,ai_engineer,Claude Desktop,yes,0,0,0,0,0,,low/medium/high,yes/no/unknown,yes/no/unknown,yes/no,yes/no,yes/no,

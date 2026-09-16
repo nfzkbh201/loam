@@ -75,6 +75,8 @@ Ask these after sending the report:
 
 ## Manual Research Log
 
+Use [research/scan-log-template.csv](research/scan-log-template.csv). The private scan script prints a suggested CSV row after each scan.
+
 ```text
 scan_id:
 date:

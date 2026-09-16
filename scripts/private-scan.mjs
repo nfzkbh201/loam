@@ -99,7 +99,45 @@ try {
       `medium ${result.summary.by_severity.medium}, low ${result.summary.by_severity.low})`
   );
   console.log(`Risk score: ${result.summary.risk_score}/100`);
+  console.log("");
+  console.log("Suggested scan-log CSV row:");
+  console.log(buildScanLogRow(result, parsed.options.targetLabel || "scan-target"));
 } catch (error) {
   console.error(`private scan failed: ${error.message}`);
   process.exit(1);
+}
+
+function buildScanLogRow(result, targetLabel) {
+  const topFinding = result.findings[0]?.id || "";
+  const today = new Date().toISOString().slice(0, 10);
+
+  return [
+    "scan-XXX",
+    today,
+    "",
+    targetLabel,
+    "",
+    result.summary.by_severity.critical,
+    result.summary.by_severity.high,
+    result.summary.by_severity.medium,
+    result.summary.by_severity.low,
+    result.summary.risk_score,
+    topFinding,
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ].map(csvEscape).join(",");
+}
+
+function csvEscape(value) {
+  const text = String(value ?? "");
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replaceAll("\"", "\"\"")}"`;
+  }
+
+  return text;
 }

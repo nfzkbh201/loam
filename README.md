@@ -158,3 +158,5 @@ This project is intended for defensive research into agentic supply-chain securi
 See [docs/private-scans.md](docs/private-scans.md) for a design-partner scan workflow.
 
 See [DESIGN_PARTNER.md](DESIGN_PARTNER.md) for the full run kit and outreach copy.
+
+See [research/first-20-scans.md](research/first-20-scans.md) and [research/scan-log-template.csv](research/scan-log-template.csv) for the first validation loop.
