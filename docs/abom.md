@@ -65,3 +65,32 @@ node ./src/cli.mjs scan-known . \
 The full ABOM may include config filenames, server names, package names, commands, args, env key names, and path arguments. Treat it as private.
 
 The redacted ABOM preserves aggregate counts, capability labels, target type labels, and per-component capability sets, but removes exact paths, config filenames, server names, package names, command args, and env key names.
+
+## Diff
+
+Compare an approved ABOM baseline against a new scan:
+
+```bash
+node ./src/cli.mjs diff \
+  --baseline main-abom.json \
+  --current agentsec-abom.json
+```
+
+Use `--fail-on` to turn the diff into a CI gate:
+
+```bash
+node ./src/cli.mjs diff \
+  --baseline main-abom.json \
+  --current agentsec-abom.json \
+  --fail-on high
+```
+
+The diff reports:
+
+- added or removed capabilities
+- added or removed MCP servers
+- added or removed GitHub workflow files
+- added or removed env files
+- newly introduced risk paths, such as `web_access -> shell_exec`
+
+Use full ABOMs for precise diffs. Redacted ABOMs are better for sharing aggregate inventory and research findings.

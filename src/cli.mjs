@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import { diffAboms, shouldFailDiff } from "./diff.mjs";
 import { discoverTargets } from "./discovery.mjs";
 import { scanTarget, scanTargets } from "./scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "./report/abom.mjs";
@@ -8,6 +9,7 @@ import { buildMarkdownReport } from "./report/markdown.mjs";
 import { buildRedactedMarkdownReport } from "./report/redacted-markdown.mjs";
 import { buildResearchExport } from "./report/research.mjs";
 import { buildSarifReport } from "./report/sarif.mjs";
+import { printDiffReport } from "./report/diff-terminal.mjs";
 import { printDiscoveryReport } from "./report/discovery-terminal.mjs";
 import { printTerminalReport } from "./report/terminal.mjs";
 
@@ -25,6 +27,7 @@ Usage:
   agentsec discover [path] [--json]
   agentsec scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--fail-on <severity>]
   agentsec scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--fail-on <severity>]
+  agentsec diff --baseline <file> --current <file> [--json] [--fail-on <severity>]
 
 Examples:
   agentsec discover .
@@ -38,6 +41,7 @@ Examples:
   agentsec scan . --sarif agentsec.sarif
   agentsec scan . --research agentsec-research.json
   agentsec scan . --fail-on critical
+  agentsec diff --baseline main-abom.json --current agentsec-abom.json --fail-on high
 `);
 }
 
@@ -47,6 +51,66 @@ function parseArgs(argv) {
 
   if (!command || command === "--help" || command === "-h") {
     return { help: true };
+  }
+
+  if (command === "diff") {
+    const options = {
+      baseline: null,
+      current: null,
+      json: false,
+      failOn: null
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--baseline") {
+        const baselinePath = args[i + 1];
+        if (!baselinePath || baselinePath.startsWith("-")) {
+          return { error: "--baseline requires an ABOM JSON file path." };
+        }
+        options.baseline = baselinePath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--current") {
+        const currentPath = args[i + 1];
+        if (!currentPath || currentPath.startsWith("-")) {
+          return { error: "--current requires an ABOM JSON file path." };
+        }
+        options.current = currentPath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--json") {
+        options.json = true;
+        continue;
+      }
+
+      if (arg === "--fail-on") {
+        const severity = args[i + 1];
+        if (!SEVERITY_RANK[severity]) {
+          return { error: "--fail-on must be one of: low, medium, high, critical." };
+        }
+        options.failOn = severity;
+        i += 1;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    if (!options.baseline) {
+      return { error: "Missing --baseline ABOM file." };
+    }
+
+    if (!options.current) {
+      return { error: "Missing --current ABOM file." };
+    }
+
+    return { command, options };
   }
 
   if (command === "discover" || command === "scan-known") {
@@ -253,6 +317,25 @@ if (parsed.error) {
 }
 
 try {
+  if (parsed.command === "diff") {
+    const diff = diffAboms({
+      baseline: readJsonFile(parsed.options.baseline),
+      current: readJsonFile(parsed.options.current)
+    });
+
+    if (parsed.options.json) {
+      console.log(JSON.stringify(diff, null, 2));
+    } else {
+      printDiffReport(diff);
+    }
+
+    if (parsed.options.failOn && shouldFailDiff(diff, parsed.options.failOn)) {
+      process.exit(1);
+    }
+
+    process.exit(0);
+  }
+
   if (parsed.command === "discover") {
     const results = discoverTargets({ root: parsed.target });
 
@@ -334,7 +417,7 @@ try {
     }
   }
 } catch (error) {
-  console.error(`agentsec scan failed: ${error.message}`);
+  console.error(`agentsec failed: ${error.message}`);
   process.exit(1);
 }
 
@@ -352,4 +435,14 @@ function uniqueByScanHint(discovered) {
   }
 
   return output;
+}
+
+function readJsonFile(filePath) {
+  const resolved = path.resolve(filePath);
+
+  try {
+    return JSON.parse(fs.readFileSync(resolved, "utf8"));
+  } catch (error) {
+    throw new Error(`Could not read JSON file ${resolved}: ${error.message}`);
+  }
 }

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { diffAboms, shouldFailDiff } from "../src/diff.mjs";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
 import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
@@ -149,4 +150,21 @@ test("ABOM exports full and redacted inventories", () => {
   assert.equal(redactedText.includes("mcp-shell"), false);
   assert.equal(redactedText.includes(".mcp.json"), false);
   assert.equal(redactedText.includes("Cursor config"), true);
+});
+
+test("ABOM diff flags newly introduced critical risk paths", () => {
+  const baseline = buildAbomExport(scanTarget(path.join(fixtures, "safe-agent")));
+  const current = buildAbomExport(scanTarget(path.join(fixtures, "browser-shell-risk")));
+  const diff = diffAboms({ baseline, current });
+
+  assert.equal(diff.summary.by_severity.critical >= 1, true);
+  assert.equal(
+    diff.changes.some((change) => change.id === "web-access-can-reach-shell-exec"),
+    true
+  );
+  assert.equal(
+    diff.changes.some((change) => change.id === "capability-added-shell_exec"),
+    true
+  );
+  assert.equal(shouldFailDiff(diff, "critical"), true);
 });

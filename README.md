@@ -27,6 +27,7 @@ node ./src/cli.mjs scan ./fixtures/browser-shell-risk --markdown agentsec-report
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-markdown public-report.md
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --abom agentsec-abom.json
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --redacted-abom agentsec-redacted-abom.json
+node ./src/cli.mjs diff --baseline main-abom.json --current agentsec-abom.json --fail-on high
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --sarif agentsec.sarif
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk --research agentsec-research.json
 node ./src/cli.mjs scan ./fixtures/repo-write-deploy-risk --fail-on critical
@@ -77,6 +78,20 @@ jobs:
 ```
 
 The action writes the report to the GitHub job summary and, on pull requests, creates or updates a single AgentSec comment.
+
+## ABOM Diff
+
+Use ABOM diff to compare an approved baseline against a new scan:
+
+```bash
+node ./src/cli.mjs scan . --abom agentsec-abom.json
+node ./src/cli.mjs diff \
+  --baseline main-abom.json \
+  --current agentsec-abom.json \
+  --fail-on high
+```
+
+The diff highlights added capabilities, new MCP servers, new workflows, new env files, and newly introduced risk paths such as web access reaching shell execution.
 
 ## Current Scope
 
@@ -145,6 +160,7 @@ The `fixtures/` directory contains intentionally vulnerable agent setups:
 - redacted Markdown report for sharing anonymized findings
 - full ABOM JSON for private/internal use
 - redacted ABOM JSON for sharing anonymized inventory
+- ABOM diff report for comparing approved and current agent stacks
 - SARIF report for security tooling
 - redacted research export for aggregate studies
 
