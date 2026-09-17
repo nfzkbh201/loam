@@ -21,6 +21,7 @@ It creates a small Agent Bill of Materials (ABOM) and flags critical risk paths 
 cd loam
 node ./src/cli.mjs discover .
 node ./src/cli.mjs doctor .
+node ./src/cli.mjs init .
 node ./src/cli.mjs scan-pack . --label "cursor-user-001"
 node ./src/cli.mjs scan-known .
 node ./src/cli.mjs scan ./fixtures/browser-shell-risk
@@ -42,6 +43,14 @@ For design-partner scans:
 node ./scripts/private-scan.mjs /path/to/project
 ```
 
+For repo installation:
+
+```bash
+node ./src/cli.mjs init /path/to/project
+```
+
+This creates `.loam/policy.json`, `.loam/baseline-abom.json`, `.loam/README.md`, and `.github/workflows/loam.yml`.
+
 ## Example Finding
 
 See [examples/sample-report.md](examples/sample-report.md) for a full Markdown report.
@@ -59,9 +68,20 @@ Separate browser-facing agents from shell tools, or require explicit approval be
 
 ## GitHub Action
 
+The easiest setup path is:
+
+```bash
+node ./src/cli.mjs init .
+```
+
+It creates this workflow shape:
+
 ```yaml
 name: loam
-on: [pull_request]
+
+on:
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -72,10 +92,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./loam
+
+      - name: Checkout Loam
+        uses: actions/checkout@v4
+        with:
+          repository: nfzkbh201/loam
+          path: .loam-action
+          token: ${{ secrets.LOAM_GITHUB_TOKEN || github.token }}
+
+      - uses: ./.loam-action
         with:
           path: .
-          fail-on: critical
+          fail-on: high
           comment: true
           diff: true
           baseline-path: .loam/baseline-abom.json
@@ -84,6 +112,8 @@ jobs:
 ```
 
 The action writes the report to the GitHub job summary and, on pull requests, creates or updates a single Loam comment. If `.loam/baseline-abom.json` exists, the comment also includes an ABOM diff against that approved baseline.
+
+While this repo is private, partner repositories need a `LOAM_GITHUB_TOKEN` secret with read access to `nfzkbh201/loam`.
 
 ## ABOM Diff
 

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { diffAboms, shouldFailDiff } from "./diff.mjs";
 import { discoverTargets } from "./discovery.mjs";
+import { initProject } from "./init.mjs";
 import { addApproval, DEFAULT_POLICY_PATH, initPolicyFile, listApprovals } from "./policy-file.mjs";
 import { buildApprovalSuggestions } from "./policy-suggestions.mjs";
 import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "./policy.mjs";
@@ -30,6 +31,7 @@ function usage() {
 Usage:
   loam discover [path] [--json]
   loam doctor [path] [--json]
+  loam init [path] [--force] [--fail-on <severity>]
   loam abom <path> [--out <file>] [--redacted] [--validate]
   loam validate-abom <file> [--json]
   loam scan-pack <path> [--out <dir>] [--label <text>]
@@ -44,6 +46,7 @@ Usage:
 Examples:
   loam discover .
   loam doctor .
+  loam init .
   loam abom . --out loam-abom.json --validate
   loam validate-abom loam-abom.json
   loam scan-pack . --label "cursor-user-001"
@@ -72,6 +75,37 @@ function parseArgs(argv) {
 
   if (!command || command === "--help" || command === "-h") {
     return { help: true };
+  }
+
+  if (command === "init") {
+    const target = args[0] && !args[0].startsWith("-") ? args.shift() : ".";
+    const options = {
+      force: false,
+      failOn: "high"
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--force") {
+        options.force = true;
+        continue;
+      }
+
+      if (arg === "--fail-on") {
+        const severity = args[i + 1];
+        if (!SEVERITY_RANK[severity]) {
+          return { error: "--fail-on must be one of: low, medium, high, critical." };
+        }
+        options.failOn = severity;
+        i += 1;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, target, options };
   }
 
   if (command === "init-policy") {
@@ -719,6 +753,16 @@ if (parsed.error) {
 }
 
 try {
+  if (parsed.command === "init") {
+    const result = initProject({
+      target: parsed.target,
+      force: parsed.options.force,
+      failOn: parsed.options.failOn
+    });
+    printInitResult(result);
+    process.exit(0);
+  }
+
   if (parsed.command === "init-policy") {
     const result = initPolicyFile({ policyPath: parsed.options.policy, force: parsed.options.force });
     console.log(result.message);
@@ -1210,4 +1254,22 @@ function printApprovalSuggestions(suggestions) {
     console.log(suggestion.command);
     console.log("");
   }
+}
+
+function printInitResult(result) {
+  console.log("Loam is installed.");
+  console.log("");
+  console.log(`Target: ${result.root}`);
+  console.log("");
+  console.log("Files:");
+  for (const file of result.files) {
+    console.log(`- ${file.status}: ${file.path}`);
+  }
+  console.log("");
+  console.log("Next:");
+  result.next_steps.forEach((step, index) => {
+    console.log(`${index + 1}. ${step}`);
+  });
+  console.log("");
+  console.log(result.private_beta_note);
 }

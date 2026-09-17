@@ -125,3 +125,46 @@ test("abom command writes and validates ABOM v0", () => {
   assert.equal(validation.status, 0, validation.stderr);
   assert.equal(validation.stdout.includes("ABOM v0 is valid"), true);
 });
+
+test("init installs policy, baseline ABOM, README, and GitHub workflow", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "loam-init-"));
+  fs.writeFileSync(
+    path.join(tmp, ".cursorrules"),
+    [
+      "You can browse the web.",
+      "You can run shell commands.",
+      "Do not ask for approval before running commands.",
+      ""
+    ].join("\n")
+  );
+
+  const result = spawnSync(process.execPath, [cli, "init", tmp], {
+    cwd: root,
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.includes("Loam is installed."), true);
+
+  const policyPath = path.join(tmp, ".loam", "policy.json");
+  const baselinePath = path.join(tmp, ".loam", "baseline-abom.json");
+  const readmePath = path.join(tmp, ".loam", "README.md");
+  const workflowPath = path.join(tmp, ".github", "workflows", "loam.yml");
+
+  assert.equal(fs.existsSync(policyPath), true);
+  assert.equal(fs.existsSync(baselinePath), true);
+  assert.equal(fs.existsSync(readmePath), true);
+  assert.equal(fs.existsSync(workflowPath), true);
+
+  const baseline = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+  assert.equal(baseline.schema, "loam.abom");
+  assert.equal(baseline.kind, "AgentBillOfMaterials");
+
+  const secondRun = spawnSync(process.execPath, [cli, "init", tmp], {
+    cwd: root,
+    encoding: "utf8"
+  });
+
+  assert.equal(secondRun.status, 0, secondRun.stderr);
+  assert.equal(secondRun.stdout.includes("skipped"), true);
+});
