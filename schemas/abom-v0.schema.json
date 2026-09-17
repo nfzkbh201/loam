@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loam.local/schemas/abom-v0.schema.json",
+  "title": "Loam Agent Bill of Materials v0",
+  "description": "A Loam ABOM inventories agent authority: agents, instructions, tools, credentials reachability, approval boundaries, authority paths, findings, and remediations.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "schema_version", "kind", "tool", "version", "exported_at", "metadata", "abom"],
+  "properties": {
+    "schema": {
+      "const": "loam.abom"
+    },
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "kind": {
+      "const": "AgentBillOfMaterials"
+    },
+    "tool": {
+      "const": "loam"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "exported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "redacted": {
+      "type": "boolean"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["target", "scanner", "generated_at", "redacted"],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "scanner": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": {
+            "name": {
+              "const": "loam"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "redacted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "abom": {
+      "type": "object",
+      "required": [
+        "agents",
+        "instruction_sources",
+        "tools",
+        "mcp_servers",
+        "secrets_reachability",
+        "approval_boundaries",
+        "authority_paths",
+        "findings",
+        "policy_results"
+      ],
+      "properties": {
+        "agents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/agent"
+          }
+        },
+        "instruction_sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/instruction_source"
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tool"
+          }
+        },
+        "mcp_servers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mcp_server"
+          }
+        },
+        "secrets_reachability": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/secrets_reachability"
+          }
+        },
+        "approval_boundaries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/approval_boundary"
+          }
+        },
+        "authority_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/authority_path"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        },
+        "policy_results": {
+          "type": ["object", "null"]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "required": ["id", "name", "type", "sources", "capabilities"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "sources": { "type": "array", "items": { "type": "string" } },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "risk_signals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "instruction_source": {
+      "type": "object",
+      "required": ["id", "type", "source", "capabilities", "risk_signals"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "source": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "risk_signals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["id", "type", "name", "capabilities"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "name": { "type": "string" },
+        "source": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "risk_signals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "mcp_server": {
+      "type": "object",
+      "required": ["id", "name", "config_file", "capabilities", "env_keys", "paths"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "package": { "type": ["string", "null"] },
+        "command": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "config_file": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "env_keys": { "type": "array", "items": { "type": "string" } },
+        "paths": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "secrets_reachability": {
+      "type": "object",
+      "required": ["id", "source", "reachable_by", "secret_keys", "exposure"],
+      "properties": {
+        "id": { "type": "string" },
+        "source": { "type": "string" },
+        "reachable_by": { "type": "array", "items": { "type": "string" } },
+        "secret_keys": { "type": "array", "items": { "type": "string" } },
+        "exposure": { "type": "string" }
+      }
+    },
+    "approval_boundary": {
+      "type": "object",
+      "required": ["id", "subject", "status", "sensitive_capabilities"],
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "status": { "enum": ["present", "missing", "unknown", "approved_exception"] },
+        "sensitive_capabilities": { "type": "array", "items": { "type": "string" } },
+        "evidence": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "authority_path": {
+      "type": "object",
+      "required": ["id", "severity", "title", "nodes", "why", "fix"],
+      "properties": {
+        "id": { "type": "string" },
+        "severity": { "enum": ["critical", "high", "medium", "low"] },
+        "title": { "type": "string" },
+        "nodes": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "why": { "type": "string" },
+        "fix": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": ["id", "severity", "title", "path", "why", "fix", "evidence"],
+      "properties": {
+        "id": { "type": "string" },
+        "severity": { "enum": ["critical", "high", "medium", "low"] },
+        "title": { "type": "string" },
+        "path": { "type": "array", "items": { "type": "string" } },
+        "why": { "type": "string" },
+        "fix": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "object" } }
+      }
+    }
+  }
+}

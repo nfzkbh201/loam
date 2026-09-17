@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./agentsec
+      - uses: ./loam
         with:
           path: .
           fail-on: critical

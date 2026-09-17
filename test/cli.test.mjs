@@ -90,3 +90,38 @@ test("doctor json reports machine-readable readiness", () => {
   assert.equal(report.found.some((surface) => surface.label === "Project config (.mcp.json)"), true);
   assert.equal(report.recommended_command.includes("scan-pack"), true);
 });
+
+test("abom command writes and validates ABOM v0", () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "loam-abom-"));
+  const out = path.join(tmp, "abom.json");
+  const result = spawnSync(
+    process.execPath,
+    [
+      cli,
+      "abom",
+      path.join(fixtures, "cursor-rules-risk"),
+      "--out",
+      out,
+      "--validate"
+    ],
+    {
+      cwd: root,
+      encoding: "utf8"
+    }
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.includes("ABOM v0 is valid"), true);
+
+  const abom = JSON.parse(fs.readFileSync(out, "utf8"));
+  assert.equal(abom.schema, "loam.abom");
+  assert.equal(abom.kind, "AgentBillOfMaterials");
+
+  const validation = spawnSync(process.execPath, [cli, "validate-abom", out], {
+    cwd: root,
+    encoding: "utf8"
+  });
+
+  assert.equal(validation.status, 0, validation.stderr);
+  assert.equal(validation.stdout.includes("ABOM v0 is valid"), true);
+});

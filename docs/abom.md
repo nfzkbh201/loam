@@ -4,6 +4,8 @@ An Agent Bill of Materials, or ABOM, is a structured inventory of the components
 
 Traditional SBOMs describe software packages. Agentic systems need a broader view because the risk comes from capability paths, not just dependencies.
 
+For the formal Loam ABOM v0 spec, see [abom-v0.md](./abom-v0.md).
+
 An ABOM should include:
 
 - agent framework and runtime

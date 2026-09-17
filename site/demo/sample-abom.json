@@ -1,57 +1,341 @@
 {
-  "schema": "loam.abom.v0",
-  "target": "cursor-claude-agent-workspace",
-  "generated_at": "2026-09-16T00:00:00Z",
-  "risk_score": 82,
-  "summary": {
-    "critical": 2,
-    "high": 3,
-    "medium": 0,
-    "low": 0
+  "schema": "loam.abom",
+  "schema_version": "0.1.0",
+  "kind": "AgentBillOfMaterials",
+  "tool": "loam",
+  "version": "0.1.0",
+  "exported_at": "2026-09-17T07:31:02.267Z",
+  "redacted": true,
+  "metadata": {
+    "target": "target",
+    "targets": [],
+    "scanner": {
+      "name": "loam",
+      "version": "0.1.0"
+    },
+    "generated_at": "2026-09-17T07:31:02.267Z",
+    "scanned_at": "2026-09-17T07:31:02.260Z",
+    "redacted": true
   },
-  "capabilities": [
-    "web_access",
-    "agent_context",
-    "shell_exec",
-    "filesystem_access",
-    "secrets_access",
-    "repo_write",
-    "deployment_workflow"
-  ],
-  "mcp_servers": [
-    {
-      "name": "filesystem",
-      "capabilities": ["filesystem_read", "filesystem_write"],
-      "scope": "workspace"
-    },
-    {
-      "name": "browser",
-      "capabilities": ["web_fetch", "page_read"],
-      "scope": "network"
-    }
-  ],
-  "instruction_files": [
-    ".cursor/rules/agent.mdc",
-    "CLAUDE.md"
-  ],
-  "findings": [
-    {
-      "severity": "critical",
-      "title": "Untrusted web content can reach shell execution",
-      "path": ["web_access", "agent_context", "shell_exec"],
-      "fix": "Separate browser-facing agents from shell tools or require explicit approval."
-    },
-    {
-      "severity": "critical",
-      "title": "Secrets reachable from browser-facing agent context",
-      "path": ["web_access", "agent_context", "secrets_access"],
-      "fix": "Move secrets outside agent-readable paths and split credentialed workflows."
-    },
-    {
-      "severity": "high",
-      "title": "Repository writes sit near deployment workflow",
-      "path": ["repo_write", "deployment_workflow"],
-      "fix": "Require human review for agent-authored commits and separate deploy credentials."
-    }
-  ]
+  "target": "target",
+  "targets": [],
+  "abom": {
+    "mcp_config_files": [],
+    "mcp_servers": [],
+    "capabilities": [
+      "filesystem_access",
+      "secrets_access",
+      "shell_exec",
+      "web_access"
+    ],
+    "package_scripts": {},
+    "github_workflows": [],
+    "env_files": [],
+    "agent_instructions": [
+      {
+        "target_label": null,
+        "capabilities": [
+          "filesystem_access",
+          "secrets_access",
+          "shell_exec",
+          "web_access"
+        ],
+        "risk_signals": [
+          "credential_instruction",
+          "no_visible_approval"
+        ]
+      }
+    ],
+    "agents": [
+      {
+        "id": "agent:instruction-1",
+        "name": "Agent instruction 1",
+        "type": "cursor",
+        "sources": [
+          "instruction:1"
+        ],
+        "capabilities": [
+          "filesystem_access",
+          "secrets_access",
+          "shell_exec",
+          "web_access"
+        ],
+        "risk_signals": [
+          "credential_instruction",
+          "no_visible_approval"
+        ]
+      }
+    ],
+    "instruction_sources": [
+      {
+        "id": "instruction:1",
+        "type": "cursor_rule",
+        "source": "instruction:1",
+        "capabilities": [
+          "filesystem_access",
+          "secrets_access",
+          "shell_exec",
+          "web_access"
+        ],
+        "risk_signals": [
+          "credential_instruction",
+          "no_visible_approval"
+        ]
+      }
+    ],
+    "tools": [],
+    "secrets_reachability": [],
+    "approval_boundaries": [
+      {
+        "id": "approval:sensitive-capabilities",
+        "subject": "sensitive_capability_use",
+        "status": "missing",
+        "sensitive_capabilities": [
+          "secrets_access",
+          "shell_exec"
+        ],
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "source": "instruction:1"
+          }
+        ]
+      }
+    ],
+    "authority_paths": [
+      {
+        "id": "authority-path:untrusted-web-content-can-reach-shell-execution",
+        "severity": "critical",
+        "title": "Untrusted web content can reach shell execution",
+        "nodes": [
+          "web_access",
+          "agent_context",
+          "shell_exec"
+        ],
+        "why": "A browser or fetch tool can introduce prompt-injected content that influences a shell-capable agent.",
+        "fix": "Separate browser-facing agents from shell tools, or require explicit approval before shell execution.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "authority-path:secrets-may-be-reachable-from-a-web-exposed-agent",
+        "severity": "critical",
+        "title": "Secrets may be reachable from a web-exposed agent",
+        "nodes": [
+          "web_access",
+          "agent_context",
+          "secrets_access"
+        ],
+        "why": "Prompt-injected web content could influence an agent that also has credentials in its runtime.",
+        "fix": "Remove secrets from browser-facing agent runtimes or put credentialed tools behind approval.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "authority-path:agent-instructions-reduce-approval-around-sensitive-capabilities",
+        "severity": "high",
+        "title": "Agent instructions reduce approval around sensitive capabilities",
+        "nodes": [
+          "agent_instruction",
+          "no_visible_approval",
+          "sensitive_capability"
+        ],
+        "why": "Instructions that tell agents not to ask or to act automatically can bypass human review around shell, repo, deploy, or payment actions.",
+        "fix": "Remove blanket auto-approval instructions and require explicit review for sensitive tool use.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "authority-path:agent-instructions-reference-credentials-near-web-or-shell-capabilities",
+        "severity": "high",
+        "title": "Agent instructions reference credentials near web or shell capabilities",
+        "nodes": [
+          "agent_instruction",
+          "credentials",
+          "agent_runtime"
+        ],
+        "why": "Project instructions that mention secrets, tokens, or env files near web or shell-capable agents increase accidental exposure risk.",
+        "fix": "Keep secrets outside agent-readable instructions and avoid mixing credentialed workflows with web or shell tools.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      }
+    ],
+    "findings": [
+      {
+        "id": "untrusted-web-content-can-reach-shell-execution",
+        "severity": "critical",
+        "title": "Untrusted web content can reach shell execution",
+        "path": [
+          "web_access",
+          "agent_context",
+          "shell_exec"
+        ],
+        "why": "A browser or fetch tool can introduce prompt-injected content that influences a shell-capable agent.",
+        "fix": "Separate browser-facing agents from shell tools, or require explicit approval before shell execution.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "secrets-may-be-reachable-from-a-web-exposed-agent",
+        "severity": "critical",
+        "title": "Secrets may be reachable from a web-exposed agent",
+        "path": [
+          "web_access",
+          "agent_context",
+          "secrets_access"
+        ],
+        "why": "Prompt-injected web content could influence an agent that also has credentials in its runtime.",
+        "fix": "Remove secrets from browser-facing agent runtimes or put credentialed tools behind approval.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "agent-instructions-reduce-approval-around-sensitive-capabilities",
+        "severity": "high",
+        "title": "Agent instructions reduce approval around sensitive capabilities",
+        "path": [
+          "agent_instruction",
+          "no_visible_approval",
+          "sensitive_capability"
+        ],
+        "why": "Instructions that tell agents not to ask or to act automatically can bypass human review around shell, repo, deploy, or payment actions.",
+        "fix": "Remove blanket auto-approval instructions and require explicit review for sensitive tool use.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "agent-instructions-reference-credentials-near-web-or-shell-capabilities",
+        "severity": "high",
+        "title": "Agent instructions reference credentials near web or shell capabilities",
+        "path": [
+          "agent_instruction",
+          "credentials",
+          "agent_runtime"
+        ],
+        "why": "Project instructions that mention secrets, tokens, or env files near web or shell-capable agents increase accidental exposure risk.",
+        "fix": "Keep secrets outside agent-readable instructions and avoid mixing credentialed workflows with web or shell tools.",
+        "evidence": [
+          {
+            "type": "agent_instruction",
+            "redacted_ref": "evidence:1",
+            "capabilities": [
+              "filesystem_access",
+              "secrets_access",
+              "shell_exec",
+              "web_access"
+            ],
+            "risk_signals": [
+              "credential_instruction",
+              "no_visible_approval"
+            ]
+          }
+        ]
+      }
+    ],
+    "policy_results": null,
+    "mcp_config_file_count": 0,
+    "mcp_server_count": 0,
+    "agent_instruction_file_count": 1,
+    "github_workflow_count": 0,
+    "env_file_count": 0,
+    "secret_like_env_key_count": 0
+  }
 }

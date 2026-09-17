@@ -5,14 +5,14 @@ Use this when sharing the private repo with an early tester or design partner.
 ## Clone
 
 ```bash
-git clone git@github.com:nfzkbh201/agentsec.git loam
+git clone git@github.com:nfzkbh201/loam.git loam
 cd loam
 ```
 
 If SSH is not configured:
 
 ```bash
-git clone https://github.com/nfzkbh201/agentsec.git loam
+git clone https://github.com/nfzkbh201/loam.git loam
 cd loam
 ```
 

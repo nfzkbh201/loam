@@ -7,7 +7,7 @@ import { addApproval, DEFAULT_POLICY_PATH, initPolicyFile, listApprovals } from 
 import { buildApprovalSuggestions } from "./policy-suggestions.mjs";
 import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "./policy.mjs";
 import { scanTarget, scanTargets } from "./scanner.mjs";
-import { buildAbomExport, buildRedactedAbomExport } from "./report/abom.mjs";
+import { buildAbomExport, buildRedactedAbomExport, validateAbomV0Document } from "./report/abom.mjs";
 import { buildMarkdownReport } from "./report/markdown.mjs";
 import { buildRedactedMarkdownReport } from "./report/redacted-markdown.mjs";
 import { buildResearchExport } from "./report/research.mjs";
@@ -30,6 +30,8 @@ function usage() {
 Usage:
   loam discover [path] [--json]
   loam doctor [path] [--json]
+  loam abom <path> [--out <file>] [--redacted] [--validate]
+  loam validate-abom <file> [--json]
   loam scan-pack <path> [--out <dir>] [--label <text>]
   loam scan-known [path] [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
   loam scan <path> [--json] [--markdown <file>] [--redacted-markdown <file>] [--abom <file>] [--redacted-abom <file>] [--sarif <file>] [--research <file>] [--policy <file>] [--approval-suggestions] [--fail-on <severity>]
@@ -42,6 +44,8 @@ Usage:
 Examples:
   loam discover .
   loam doctor .
+  loam abom . --out loam-abom.json --validate
+  loam validate-abom loam-abom.json
   loam scan-pack . --label "cursor-user-001"
   loam scan-known .
   loam scan .
@@ -217,6 +221,30 @@ function parseArgs(argv) {
     return { command, options };
   }
 
+  if (command === "validate-abom") {
+    const file = args.shift();
+    if (!file || file.startsWith("-")) {
+      return { error: "Missing validate-abom file." };
+    }
+
+    const options = {
+      json: false
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--json") {
+        options.json = true;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, file, options };
+  }
+
   if (command === "suggest-approvals") {
     const target = args.shift();
     if (!target || target.startsWith("-")) {
@@ -383,6 +411,47 @@ function parseArgs(argv) {
         }
         options.label = label;
         i += 1;
+        continue;
+      }
+
+      return { error: `Unknown option: ${arg}` };
+    }
+
+    return { command, target, options };
+  }
+
+  if (command === "abom") {
+    const target = args.shift();
+    if (!target || target.startsWith("-")) {
+      return { error: "Missing abom path." };
+    }
+
+    const options = {
+      out: null,
+      redacted: false,
+      validate: false
+    };
+
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+
+      if (arg === "--out") {
+        const outPath = args[i + 1];
+        if (!outPath || outPath.startsWith("-")) {
+          return { error: "--out requires a file path." };
+        }
+        options.out = outPath;
+        i += 1;
+        continue;
+      }
+
+      if (arg === "--redacted") {
+        options.redacted = true;
+        continue;
+      }
+
+      if (arg === "--validate") {
+        options.validate = true;
         continue;
       }
 
@@ -681,6 +750,23 @@ try {
     process.exit(0);
   }
 
+  if (parsed.command === "validate-abom") {
+    const document = readJsonFile(parsed.file);
+    const validation = validateAbomV0Document(document);
+    if (parsed.options.json) {
+      console.log(JSON.stringify(validation, null, 2));
+    } else if (validation.valid) {
+      console.log("ABOM v0 is valid.");
+    } else {
+      console.log("ABOM v0 is invalid.");
+      for (const error of validation.errors) {
+        console.log(`- ${error}`);
+      }
+    }
+
+    process.exit(validation.valid ? 0 : 1);
+  }
+
   if (parsed.command === "suggest-approvals") {
     const result = scanTarget(parsed.target);
     const policy = readJsonFile(parsed.options.policy);
@@ -757,6 +843,31 @@ try {
     console.log(`Private report: ${output.files.privateReport}`);
     console.log(`Redacted report: ${output.files.redactedReport}`);
     console.log(`Research export: ${output.files.research}`);
+    process.exit(0);
+  }
+
+  if (parsed.command === "abom") {
+    const result = scanTarget(parsed.target);
+    const abom = parsed.options.redacted ? buildRedactedAbomExport(result) : buildAbomExport(result);
+    const validation = validateAbomV0Document(abom);
+
+    if (parsed.options.validate && !validation.valid) {
+      throw new Error(`Generated ABOM failed v0 validation: ${validation.errors.join("; ")}`);
+    }
+
+    const serialized = JSON.stringify(abom, null, 2);
+    if (parsed.options.out) {
+      const outputPath = path.resolve(parsed.options.out);
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+      fs.writeFileSync(outputPath, serialized);
+      console.log(`ABOM v0 written to ${outputPath}`);
+      if (parsed.options.validate) {
+        console.log("ABOM v0 is valid.");
+      }
+    } else {
+      console.log(serialized);
+    }
+
     process.exit(0);
   }
 

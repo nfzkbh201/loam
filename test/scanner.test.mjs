@@ -6,7 +6,7 @@ import { diffAboms, shouldFailDiff } from "../src/diff.mjs";
 import { buildApprovalSuggestions } from "../src/policy-suggestions.mjs";
 import { evaluatePolicy, isFindingApprovedByPolicy, shouldFailPolicy, validatePolicy } from "../src/policy.mjs";
 import { scanTarget, scanTargets } from "../src/scanner.mjs";
-import { buildAbomExport, buildRedactedAbomExport } from "../src/report/abom.mjs";
+import { buildAbomExport, buildRedactedAbomExport, validateAbomV0Document } from "../src/report/abom.mjs";
 import { buildDiffMarkdownReport } from "../src/report/diff-markdown.mjs";
 import { buildMarkdownReport } from "../src/report/markdown.mjs";
 import { buildResearchExport } from "../src/report/research.mjs";
@@ -189,6 +189,23 @@ test("ABOM exports full and redacted inventories", () => {
   assert.equal(redactedText.includes("mcp-shell"), false);
   assert.equal(redactedText.includes(".mcp.json"), false);
   assert.equal(redactedText.includes("Cursor config"), true);
+});
+
+test("ABOM exports conform to Loam ABOM v0 shape", () => {
+  const result = scanTarget(path.join(fixtures, "cursor-rules-risk"));
+  const full = buildAbomExport(result);
+  const redacted = buildRedactedAbomExport(result);
+
+  assert.equal(full.schema, "loam.abom");
+  assert.equal(full.schema_version, "0.1.0");
+  assert.equal(full.kind, "AgentBillOfMaterials");
+  assert.equal(full.abom.agents.length >= 1, true);
+  assert.equal(full.abom.instruction_sources.length, 1);
+  assert.equal(full.abom.authority_paths.some((item) => item.nodes.includes("shell_exec")), true);
+  assert.equal(full.abom.findings.length, result.findings.length);
+  assert.equal(validateAbomV0Document(full).valid, true);
+  assert.equal(validateAbomV0Document(redacted).valid, true);
+  assert.equal(JSON.stringify(redacted).includes(".cursor/rules/agent.mdc"), false);
 });
 
 test("ABOM exports include redacted agent instruction inventory", () => {

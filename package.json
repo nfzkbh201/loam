@@ -6,13 +6,13 @@
   "license": "MIT",
   "private": true,
   "author": "Noor Zeb Khan",
-  "homepage": "https://github.com/nfzkbh201/agentsec#readme",
+  "homepage": "https://github.com/nfzkbh201/loam#readme",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/nfzkbh201/agentsec.git"
+    "url": "git+ssh://git@github.com/nfzkbh201/loam.git"
   },
   "bugs": {
-    "url": "https://github.com/nfzkbh201/agentsec/issues"
+    "url": "https://github.com/nfzkbh201/loam/issues"
   },
   "keywords": [
     "ai-agent",
@@ -31,6 +31,7 @@
     "examples",
     "fixtures",
     "research",
+    "schemas",
     "scripts",
     "src",
     "test",
