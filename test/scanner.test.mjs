@@ -268,10 +268,12 @@ test("ABOM diff markdown summarizes risk paths for PR comments", () => {
   const current = buildAbomExport(scanTarget(path.join(fixtures, "browser-shell-risk")));
   const markdown = buildDiffMarkdownReport(diffAboms({ baseline, current }));
 
-  assert.equal(markdown.includes("# Loam ABOM Diff"), true);
-  assert.equal(markdown.includes("## New Risk Paths"), true);
+  assert.equal(markdown.includes("# Loam Authority Change"), true);
+  assert.equal(markdown.includes("## New Authority Introduced"), true);
+  assert.equal(markdown.includes("## Authority Paths"), true);
   assert.equal(markdown.includes("web_access -> shell_exec"), true);
   assert.equal(markdown.includes("## New MCP Servers"), true);
+  assert.equal(markdown.includes("## Review Needed"), true);
 });
 
 test("policy flags denied and unapproved agent capabilities", () => {

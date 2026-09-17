@@ -47,6 +47,7 @@
     "scan": "node ./src/cli.mjs scan .",
     "scan-known": "node ./src/cli.mjs scan-known .",
     "private-scan": "node ./scripts/private-scan.mjs .",
+    "public-repo-batch": "node ./scripts/public-repo-batch.mjs",
     "test": "node --test"
   },
   "engines": {

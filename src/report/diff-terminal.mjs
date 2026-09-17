@@ -16,7 +16,7 @@ const SEVERITY_COLOR = {
 };
 
 export function printDiffReport(diff) {
-  console.log(bold("loam ABOM diff"));
+  console.log(bold("loam authority diff"));
   console.log(`${dim("Baseline:")} ${diff.baseline.target || "unknown target"}`);
   console.log(`${dim("Current:")} ${diff.current.target || "unknown target"}`);
   console.log(
@@ -27,7 +27,7 @@ export function printDiffReport(diff) {
 
   if (diff.summary.total_changes === 0) {
     console.log("");
-    console.log(`${COLORS.green}No ABOM changes detected.${COLORS.reset}`);
+    console.log(`${COLORS.green}No new agent authority detected.${COLORS.reset}`);
     return;
   }
 

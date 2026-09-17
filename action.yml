@@ -86,12 +86,18 @@ runs:
           DIFF_STATUS=$?
           set -e
 
-          printf "\n---\n\n" >> "$COMMENT_PATH"
-          cat "$DIFF_REPORT_PATH" >> "$COMMENT_PATH"
+          cp "$DIFF_REPORT_PATH" "$COMMENT_PATH"
+          {
+            printf "\n---\n\n"
+            printf "<details>\n"
+            printf "<summary>Full Loam scan report</summary>\n\n"
+            cat "$REPORT_PATH"
+            printf "\n</details>\n"
+          } >> "$COMMENT_PATH"
         elif [ "${{ inputs.diff }}" = "true" ]; then
           {
             printf "\n---\n\n"
-            printf "# Loam ABOM Diff\n\n"
+            printf "# Loam Authority Change\n\n"
             printf "No baseline ABOM found at \`%s\`. Generate one with:\n\n" "${{ inputs.baseline-path }}"
             printf "\`\`\`bash\n"
             printf "mkdir -p .loam\n"

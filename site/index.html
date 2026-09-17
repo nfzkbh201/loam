@@ -29,11 +29,11 @@
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-grid">
           <div class="hero-copy">
-            <p class="eyebrow">Agent security for the machine economy</p>
-            <h1 id="hero-title">Map agent authority before it ships.</h1>
+            <p class="eyebrow">Agent security for builder-led teams</p>
+            <h1 id="hero-title">Review agent authority in every PR.</h1>
             <p class="hero-lede">
-              Loam turns agent instructions, MCP servers, shell access, secrets, and deploy rights into an Agent Bill of Materials.
-              The first scan runs locally and shows the risky authority paths hiding in plain sight.
+              Loam installs into a repo, builds an Agent Bill of Materials, and comments on pull requests when new agent instructions,
+              MCP servers, shell access, secrets, or deploy paths expand what an AI worker can do.
             </p>
             <div class="hero-actions" aria-label="Primary actions">
               <a class="button button-primary" href="#pilot">Run a pilot scan</a>
@@ -55,20 +55,21 @@
                 <span></span>
                 <span></span>
                 <span></span>
-                <strong>loam scan-pack</strong>
+                <strong>loam init</strong>
               </div>
-              <pre><code>$ loam scan-pack ./agent-workspace
+              <pre><code>$ loam init ./agent-workspace
 
-Risk score: 82 / 100
-Findings: 2 critical, 3 high
+Created .loam/policy.json
+Created .loam/baseline-abom.json
+Created .github/workflows/loam.yml
 
-Critical
-web_access -> agent_context -> shell_exec
-Untrusted content can reach shell tools.
+PR #42
+Loam Authority Change
+Risk: Critical
 
-High
-repo_write -> deployment_workflow
-Agent commits can trigger production paths.</code></pre>
+New authority introduced:
++ web_access -> shell_exec
++ repo_write -> deployment_workflow</code></pre>
             </aside>
           </div>
         </div>
@@ -86,7 +87,7 @@ Agent commits can trigger production paths.</code></pre>
       <section class="section product" id="product">
         <div class="section-heading">
           <p class="eyebrow">The missing layer</p>
-          <h2>Security reviews are still written for humans. Agent workspaces changed the threat model.</h2>
+            <h2>Code review checks what changed. Loam checks what the agent can now do.</h2>
         </div>
         <div class="three-up">
           <article>
@@ -97,12 +98,12 @@ Agent commits can trigger production paths.</code></pre>
           <article>
             <span class="metric">02</span>
             <h3>Generate an ABOM</h3>
-            <p>Every scan produces a practical Agent Bill of Materials: what agents can read, write, call, deploy, and approve.</p>
+            <p>Every install creates a baseline Agent Bill of Materials: what agents can read, write, call, deploy, and approve.</p>
           </article>
           <article>
             <span class="metric">03</span>
-            <h3>Review before rollout</h3>
-            <p>Teams get a concise report they can attach to PRs, onboarding docs, vendor reviews, or internal AI safety reviews.</p>
+            <h3>Comment on PRs</h3>
+            <p>Loam turns ABOM diffs into reviewable authority changes, so risky agent capabilities show up before merge.</p>
           </article>
         </div>
       </section>
@@ -110,29 +111,29 @@ Agent commits can trigger production paths.</code></pre>
       <section class="section report" id="report">
         <div class="report-panel">
           <div>
-            <p class="eyebrow">Report surface</p>
-            <h2>Readable enough for founders. Specific enough for builders.</h2>
+            <p class="eyebrow">PR review surface</p>
+            <h2>The comment says what changed, why it matters, and what to review.</h2>
             <p>
-              The output is built to make one decision easy: can this agent setup ship, or does the team need to separate tools,
-              credentials, and approval boundaries first?
+              The first wedge is simple: install Loam, open a pull request, and see whether new instructions or tools create a
+              dangerous authority path against the approved baseline.
             </p>
           </div>
           <div class="report-card" aria-label="Example report fields">
             <div class="report-row">
-              <span>Agent Bill of Materials</span>
-              <strong>7 capabilities</strong>
-            </div>
-            <div class="report-row critical">
-              <span>Untrusted content to shell</span>
+              <span>Loam Authority Change</span>
               <strong>Critical</strong>
             </div>
+            <div class="report-row critical">
+              <span>web_access -> shell_exec</span>
+              <strong>New</strong>
+            </div>
             <div class="report-row high">
-              <span>Repo write near deploy</span>
-              <strong>High</strong>
+              <span>repo_write -> deployment_workflow</span>
+              <strong>New</strong>
             </div>
             <div class="report-row">
-              <span>Environment files exposed</span>
-              <strong>0 found</strong>
+              <span>Full ABOM diff</span>
+              <strong>Attached</strong>
             </div>
           </div>
         </div>
@@ -146,15 +147,15 @@ Agent commits can trigger production paths.</code></pre>
         <div class="timeline">
           <div>
             <span>Now</span>
-            <p>Scan public agent repos and open-source templates to build the first risk taxonomy.</p>
+            <p>Run Loam across public agent repos and open-source templates to build the first evidence set.</p>
           </div>
           <div>
             <span>Next</span>
-            <p>Run private design-partner scans for founders using Cursor, Claude Code, MCP, and deployment agents.</p>
+            <p>Use private design-partner scans to compare local findings against real Cursor, Claude Code, MCP, and deploy workflows.</p>
           </div>
           <div>
             <span>Then</span>
-            <p>Ship policy packs, CI checks, and ABOM exports that fit into existing engineering review workflows.</p>
+            <p>Turn repeated patterns into policy packs, ABOM v0.2, and hosted authority-map views.</p>
           </div>
         </div>
       </section>
@@ -165,7 +166,7 @@ Agent commits can trigger production paths.</code></pre>
           <h2>Using coding agents in a real repo?</h2>
           <p>
             Loam is for small teams adopting agentic tools before they have an agent security program. The first wedge is simple:
-            run a local scan, review the authority map, and tighten the highest-risk paths.
+            install the repo check, review the authority diff, and tighten the highest-risk paths.
           </p>
           <a class="button button-primary" href="mailto:founders@loam.local?subject=Loam%20pilot%20scan">Request pilot access</a>
         </div>
