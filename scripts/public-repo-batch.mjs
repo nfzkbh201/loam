@@ -155,7 +155,7 @@ function main() {
 function selectRows(rows, options) {
   return rows
     .filter((row) => githubRepoFromUrl(row.URL || row.Url || row.url))
-    .filter((row) => Number(row["Priority score"] || 0) >= options.minScore)
+    .filter((row) => parseNumber(row["Priority score"]) >= options.minScore)
     .slice(0, options.limit);
 }
 
@@ -274,7 +274,8 @@ function run(command, args) {
 function readCsv(filePath) {
   const text = fs.readFileSync(filePath, "utf8");
   const records = parseCsv(text);
-  const [headers, ...rows] = records;
+  const [rawHeaders, ...rows] = records;
+  const headers = rawHeaders.map(normalizeHeader);
 
   if (!headers?.length) {
     throw new Error(`CSV has no header row: ${filePath}`);
@@ -283,6 +284,15 @@ function readCsv(filePath) {
   return rows
     .filter((row) => row.some((value) => value !== ""))
     .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ""])));
+}
+
+function normalizeHeader(value) {
+  return String(value || "").replace(/^\uFEFF/, "").trim();
+}
+
+function parseNumber(value) {
+  const parsed = Number(String(value || "0").replaceAll(",", ""));
+  return Number.isNaN(parsed) ? 0 : parsed;
 }
 
 function writeCsv(filePath, rows) {

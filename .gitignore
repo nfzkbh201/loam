@@ -11,6 +11,9 @@ loam-*.sarif
 scan-output/
 research/scan-log.csv
 research/*-scan-log.csv
+research/public-repo-scan-results.csv
+research/public-repo-scan-packs/
+public-repos/
 *.sarif
 *.log
 *.tgz
